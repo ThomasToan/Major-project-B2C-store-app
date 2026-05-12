@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@config "../../tailwind.config.ts";
+
+:root {
+  --background: #ffffff;
+  --background-top: #ffffff;
+  --foreground: #111827;
+  --text: theme("colors.gray.900");
+  --textHover: theme("colors.gray.950");
+  --text-secondary: theme("colors.gray.600");
+  --text-secondaryHover: theme("colors.gray.500");
+  --wsu: #a31631;
+  --wsu-light: #853846;
+  --surface-raised: #ffffff;
+  --surface-muted: #fafafa;
+  --surface-subtle: #f3f4f6;
+  --surface-accent: rgba(17, 24, 39, 0.05);
+  --border-color: rgba(15, 23, 42, 0.1);
+  --accent-strong: #a31631;
+}
+
+html[data-theme="dark"] {
+  --background: #0f172a;
+  --background-top: #111827;
+  --foreground: #e5e7eb;
+  --text: theme("colors.gray.50");
+  --textHover: theme("colors.white");
+  --text-secondary: theme("colors.gray.400");
+  --text-secondaryHover: theme("colors.gray.300");
+  --surface-raised: #111827;
+  --surface-muted: #172033;
+  --surface-subtle: #1f2937;
+  --surface-accent: rgba(255, 255, 255, 0.08);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --accent-strong: #facc15;
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+@theme inline {
+  --color-primary: var(--text);
+  --color-primaryHover: var(--textHover);
+  --color-secondary: var(--text-secondary);
+  --color-secondaryHover: var(--text-secondaryHover);
+  --color-wsu: var(--wsu);
+  --color-wsu-light: var(--wsu-light);
+}
