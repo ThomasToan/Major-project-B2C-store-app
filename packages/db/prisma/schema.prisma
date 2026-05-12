@@ -33,3 +33,38 @@ model Like {
 
   @@id([postId, userIP])
 }
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  imageUrl    String
+  category    String
+  stock       Int
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  purchaseItems PurchaseItem[]
+}
+
+model Purchase {
+  id          Int      @id @default(autoincrement())
+  customerName  String
+  customerEmail String
+  totalAmount   Float
+  createdAt     DateTime @default(now())
+
+  items PurchaseItem[]
+}
+
+model PurchaseItem {
+  id         Int   @id @default(autoincrement())
+  purchaseId Int
+  productId  Int
+  quantity   Int
+  unitPrice  Float
+
+  purchase Purchase @relation(fields: [purchaseId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+}
