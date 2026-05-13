@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/Layout/AppLayout";
+import { AddToCartButton } from "@/components/Cart/AddToCartButton";
 import { getActiveProductById } from "@/functions/products";
 import { notFound } from "next/navigation";
 
@@ -105,6 +106,13 @@ export default async function ProductDetailPage({
                   </dd>
                 </div>
               </dl>
+
+              <div
+                className="rounded-lg border border-[color:var(--border-color)] bg-[color:var(--surface-muted)] p-5"
+                data-test-id="product-detail-actions"
+              >
+                <AddToCartButton productId={product.id} />
+              </div>
             </div>
           </article>
         </div>

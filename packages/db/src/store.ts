@@ -18,6 +18,32 @@ export type ProductFilters = {
   category?: string;
 };
 
+type CartWithItems = Prisma.CartGetPayload<{
+  include: {
+    items: {
+      include: {
+        product: true;
+      };
+    };
+  };
+}>;
+
+export type CartSummaryItem = {
+  id: number;
+  productId: number;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  product: StoredProduct;
+};
+
+export type CartSummary = {
+  sessionId: string;
+  items: CartSummaryItem[];
+  itemCount: number;
+  total: number;
+};
+
 type SerializablePost = Omit<StoredPost, "date"> & {
   date: string;
 };
@@ -226,6 +252,179 @@ export async function readActiveProductCategoriesFromDatabase(): Promise<
   });
 
   return categories.map((product) => product.category);
+}
+
+function emptyCartSummary(sessionId: string): CartSummary {
+  return {
+    itemCount: 0,
+    items: [],
+    sessionId,
+    total: 0,
+  };
+}
+
+function toCartSummary(cart: CartWithItems): CartSummary {
+  const items = cart.items.map((item) => {
+    const unitPrice = item.product.price;
+    const subtotal = unitPrice * item.quantity;
+
+    return {
+      id: item.id,
+      product: item.product,
+      productId: item.productId,
+      quantity: item.quantity,
+      subtotal,
+      unitPrice,
+    };
+  });
+
+  return {
+    itemCount: items.reduce((total, item) => total + item.quantity, 0),
+    items,
+    sessionId: cart.sessionId,
+    total: items.reduce((total, item) => total + item.subtotal, 0),
+  };
+}
+
+function normalizeSessionId(sessionId: string) {
+  return sessionId.trim();
+}
+
+function normalizeQuantity(quantity: number) {
+  return Math.max(1, Math.floor(quantity));
+}
+
+export async function getOrCreateCartBySessionId(sessionId: string) {
+  const normalizedSessionId = normalizeSessionId(sessionId);
+  const existingCart = await client.db.cart.findUnique({
+    where: {
+      sessionId: normalizedSessionId,
+    },
+  });
+
+  if (existingCart) {
+    return existingCart;
+  }
+
+  return client.db.cart.create({
+    data: {
+      sessionId: normalizedSessionId,
+    },
+  });
+}
+
+export async function getCartBySessionId(
+  sessionId: string,
+): Promise<CartSummary> {
+  const normalizedSessionId = normalizeSessionId(sessionId);
+  const cart = await client.db.cart.findUnique({
+    include: {
+      items: {
+        include: {
+          product: true,
+        },
+        orderBy: {
+          id: "asc",
+        },
+      },
+    },
+    where: {
+      sessionId: normalizedSessionId,
+    },
+  });
+
+  if (!cart) {
+    return emptyCartSummary(normalizedSessionId);
+  }
+
+  return toCartSummary(cart);
+}
+
+export async function addProductToCart(
+  sessionId: string,
+  productId: number,
+): Promise<CartSummary | undefined> {
+  const product = await client.db.product.findFirst({
+    where: {
+      active: true,
+      id: productId,
+    },
+  });
+
+  if (!product) {
+    return undefined;
+  }
+
+  const cart = await getOrCreateCartBySessionId(sessionId);
+
+  await client.db.cartItem.upsert({
+    create: {
+      cartId: cart.id,
+      productId,
+      quantity: 1,
+    },
+    update: {
+      quantity: {
+        increment: 1,
+      },
+    },
+    where: {
+      cartId_productId: {
+        cartId: cart.id,
+        productId,
+      },
+    },
+  });
+
+  return getCartBySessionId(sessionId);
+}
+
+export async function updateCartItemQuantity(
+  sessionId: string,
+  productId: number,
+  quantity: number,
+): Promise<CartSummary> {
+  const cart = await getOrCreateCartBySessionId(sessionId);
+
+  await client.db.cartItem.updateMany({
+    data: {
+      quantity: normalizeQuantity(quantity),
+    },
+    where: {
+      cartId: cart.id,
+      productId,
+    },
+  });
+
+  return getCartBySessionId(sessionId);
+}
+
+export async function removeCartItem(
+  sessionId: string,
+  productId: number,
+): Promise<CartSummary> {
+  const cart = await getOrCreateCartBySessionId(sessionId);
+
+  await client.db.cartItem.deleteMany({
+    where: {
+      cartId: cart.id,
+      productId,
+    },
+  });
+
+  return getCartBySessionId(sessionId);
+}
+
+export async function clearCart(sessionId: string): Promise<CartSummary> {
+  const cart = await getOrCreateCartBySessionId(sessionId);
+
+  await client.db.cartItem.deleteMany({
+    where: {
+      cartId: cart.id,
+    },
+  });
+
+  return getCartBySessionId(sessionId);
 }
 
 export async function getPostByUrlIdFromDatabase(urlId: string) {
