@@ -198,6 +198,17 @@ export async function readActiveProductsFromDatabase(
   });
 }
 
+export async function readActiveProductByIdFromDatabase(
+  id: number,
+): Promise<StoredProduct | null> {
+  return client.db.product.findFirst({
+    where: {
+      active: true,
+      id,
+    },
+  });
+}
+
 export async function readActiveProductCategoriesFromDatabase(): Promise<
   string[]
 > {

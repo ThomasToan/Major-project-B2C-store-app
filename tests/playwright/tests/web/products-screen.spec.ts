@@ -1,6 +1,12 @@
+import { client } from "@repo/db/client";
 import { products } from "@repo/db/data";
 import { seed } from "@repo/db/seed";
 import { expect, test } from "./fixtures";
+
+const currencyFormatter = new Intl.NumberFormat("en-AU", {
+  currency: "AUD",
+  style: "currency",
+});
 
 test.beforeEach(async () => {
   await seed();
@@ -111,5 +117,70 @@ test.describe("B2C PRODUCTS SCREEN", () => {
     await expect(page.getByText("Scented Soy Candle")).not.toBeVisible();
     await expect(page.getByTestId("product-card")).toHaveCount(0);
     await expect(page.getByText("No products found.")).toBeVisible();
+  });
+
+  test("opens a product detail page from the product list", async ({
+    page,
+  }) => {
+    await page.goto("/products");
+
+    await page
+      .getByTestId("product-card")
+      .filter({ hasText: "Smart Fitness Watch" })
+      .click();
+
+    await expect(page).toHaveURL(/\/products\/\d+$/);
+    await expect(page.getByTestId("product-detail")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Smart Fitness Watch" }),
+    ).toBeVisible();
+  });
+
+  test("shows product details", async ({ page }) => {
+    await page.goto("/products");
+
+    await page
+      .getByTestId("product-card")
+      .filter({ hasText: "Smart Fitness Watch" })
+      .click();
+
+    const product = products.find(
+      (item) => item.name === "Smart Fitness Watch",
+    )!;
+    await expect(page.getByTestId("product-detail-category")).toHaveText(
+      product.category,
+    );
+    await expect(page.getByTestId("product-detail-price")).toHaveText(
+      currencyFormatter.format(product.price),
+    );
+    await expect(page.getByTestId("product-detail-stock")).toHaveText(
+      `${product.stock} available`,
+    );
+    await expect(page.getByTestId("product-detail-image")).toHaveAttribute(
+      "src",
+      product.imageUrl,
+    );
+  });
+
+  test("shows not found for an invalid product id", async ({ page }) => {
+    const response = await page.goto("/products/not-a-number");
+
+    expect(response?.status()).toBe(404);
+    await expect(page.getByTestId("product-detail")).not.toBeVisible();
+  });
+
+  test("does not allow direct access to inactive product detail pages", async ({
+    page,
+  }) => {
+    const inactiveProduct = await client.db.product.findFirstOrThrow({
+      where: {
+        name: "Scented Soy Candle",
+      },
+    });
+    const response = await page.goto(`/products/${inactiveProduct.id}`);
+
+    expect(response?.status()).toBe(404);
+    await expect(page.getByText(inactiveProduct.name)).not.toBeVisible();
+    await expect(page.getByTestId("product-detail")).not.toBeVisible();
   });
 });

@@ -1,4 +1,5 @@
 import type { StoredProduct } from "@repo/db/store";
+import Link from "next/link";
 import { ProductFilterForm } from "./ProductFilterForm";
 
 const currencyFormatter = new Intl.NumberFormat("en-AU", {
@@ -55,45 +56,50 @@ export function ProductCatalog({
         ) : (
           <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {products.map((product) => (
-              <article
-                className="overflow-hidden rounded-lg border border-[color:var(--border-color)] bg-[color:var(--surface-raised)] shadow-sm"
-                data-test-id="product-card"
+              <Link
+                className="block h-full no-underline"
+                href={`/products/${product.id}`}
                 key={product.id}
               >
-                <div className="aspect-[4/3] overflow-hidden bg-[color:var(--surface-subtle)]">
-                  <img
-                    alt={product.name}
-                    className="h-full w-full object-cover"
-                    src={product.imageUrl}
-                  />
-                </div>
-                <div className="space-y-4 p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-wsu text-xs font-semibold uppercase">
-                        {product.category}
+                <article
+                  className="h-full overflow-hidden rounded-lg border border-[color:var(--border-color)] bg-[color:var(--surface-raised)] shadow-sm transition hover:border-[color:var(--link)]"
+                  data-test-id="product-card"
+                >
+                  <div className="aspect-[4/3] overflow-hidden bg-[color:var(--surface-subtle)]">
+                    <img
+                      alt={product.name}
+                      className="h-full w-full object-cover"
+                      src={product.imageUrl}
+                    />
+                  </div>
+                  <div className="space-y-4 p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-wsu text-xs font-semibold uppercase">
+                          {product.category}
+                        </p>
+                        <h2 className="text-primary mt-2 text-lg font-semibold leading-6">
+                          {product.name}
+                        </h2>
+                      </div>
+                      <p className="text-primary shrink-0 text-lg font-bold">
+                        {currencyFormatter.format(product.price)}
                       </p>
-                      <h2 className="text-primary mt-2 text-lg font-semibold leading-6">
-                        {product.name}
-                      </h2>
                     </div>
-                    <p className="text-primary shrink-0 text-lg font-bold">
-                      {currencyFormatter.format(product.price)}
+                    <p className="text-secondary line-clamp-3 text-sm leading-6">
+                      {product.description}
                     </p>
+                    <div className="flex items-center justify-between border-t border-[color:var(--border-color)] pt-4 text-sm">
+                      <span className="text-secondary font-medium">Stock</span>
+                      <span className="text-primary font-semibold">
+                        {product.stock > 0
+                          ? `${product.stock} available`
+                          : "Out of stock"}
+                      </span>
+                    </div>
                   </div>
-                  <p className="text-secondary line-clamp-3 text-sm leading-6">
-                    {product.description}
-                  </p>
-                  <div className="flex items-center justify-between border-t border-[color:var(--border-color)] pt-4 text-sm">
-                    <span className="text-secondary font-medium">Stock</span>
-                    <span className="text-primary font-semibold">
-                      {product.stock > 0
-                        ? `${product.stock} available`
-                        : "Out of stock"}
-                    </span>
-                  </div>
-                </div>
-              </article>
+                </article>
+              </Link>
             ))}
           </div>
         )}
