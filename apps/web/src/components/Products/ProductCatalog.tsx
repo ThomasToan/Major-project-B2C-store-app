@@ -1,11 +1,22 @@
 import type { StoredProduct } from "@repo/db/store";
+import { ProductFilterForm } from "./ProductFilterForm";
 
 const currencyFormatter = new Intl.NumberFormat("en-AU", {
   currency: "AUD",
   style: "currency",
 });
 
-export function ProductCatalog({ products }: { products: StoredProduct[] }) {
+export function ProductCatalog({
+  categories,
+  category,
+  products,
+  search,
+}: {
+  categories: string[];
+  category: string;
+  products: StoredProduct[];
+  search: string;
+}) {
   const productCount = products.length;
 
   return (
@@ -26,13 +37,19 @@ export function ProductCatalog({ products }: { products: StoredProduct[] }) {
           </p>
         </div>
 
+        <ProductFilterForm
+          categories={categories}
+          category={category}
+          search={search}
+        />
+
         {productCount === 0 ? (
           <div className="mt-10 border border-dashed border-[color:var(--border-color)] bg-[color:var(--surface-muted)] p-8 text-center">
             <h2 className="text-primary text-xl font-semibold">
-              No active products
+              No products found.
             </h2>
             <p className="text-secondary mt-2 text-sm">
-              Seed or activate products before showing them in the storefront.
+              Try a different search or category.
             </p>
           </div>
         ) : (

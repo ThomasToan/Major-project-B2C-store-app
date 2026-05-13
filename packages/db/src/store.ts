@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { Product as DatabaseProduct } from "@prisma/client";
+import type {
+  Prisma,
+  Product as DatabaseProduct,
+} from "@prisma/client";
 import { client } from "./client.js";
 import { type Post, posts as seedPosts } from "./data.js";
 
@@ -9,6 +12,11 @@ export type StoredPost = Post & {
 };
 
 export type StoredProduct = DatabaseProduct;
+
+export type ProductFilters = {
+  search?: string;
+  category?: string;
+};
 
 type SerializablePost = Omit<StoredPost, "date"> & {
   date: string;
@@ -154,13 +162,31 @@ export async function readPostsFromDatabase(): Promise<StoredPost[]> {
   return posts.map((post) => fromDatabasePost(post as Post)); //converts databse posts into the same shape your React components expect
 }
 
-export async function readActiveProductsFromDatabase(): Promise<
-  StoredProduct[]
-> {
+function buildProductWhere(filters: ProductFilters = {}) {
+  const search = filters.search?.trim();
+  const category = filters.category?.trim();
+  const where: Prisma.ProductWhereInput = {
+    active: true,
+  };
+
+  if (search) {
+    where.name = {
+      contains: search,
+    };
+  }
+
+  if (category) {
+    where.category = category;
+  }
+
+  return where;
+}
+
+export async function readActiveProductsFromDatabase(
+  filters: ProductFilters = {},
+): Promise<StoredProduct[]> {
   return client.db.product.findMany({
-    where: {
-      active: true,
-    },
+    where: buildProductWhere(filters),
     orderBy: [
       {
         category: "asc",
@@ -170,6 +196,25 @@ export async function readActiveProductsFromDatabase(): Promise<
       },
     ],
   });
+}
+
+export async function readActiveProductCategoriesFromDatabase(): Promise<
+  string[]
+> {
+  const categories = await client.db.product.findMany({
+    distinct: ["category"],
+    select: {
+      category: true,
+    },
+    where: {
+      active: true,
+    },
+    orderBy: {
+      category: "asc",
+    },
+  });
+
+  return categories.map((product) => product.category);
 }
 
 export async function getPostByUrlIdFromDatabase(urlId: string) {
