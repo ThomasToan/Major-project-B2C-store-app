@@ -31,12 +31,14 @@ async function addProductToCart(page: Page, productId: number) {
 
 async function registerCustomer(page: Page) {
   const email = uniqueEmail("cart");
+  const name = "Cart Customer";
 
   await page.goto("/register");
-  await page.getByLabel("Name").fill("Cart Customer");
+  await page.getByLabel("Name").fill(name);
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Register" }).click();
+  await expect(page.getByTestId("account-status")).toContainText(name);
   await expect(page.getByTestId("account-status")).toContainText(email);
 
   return email;

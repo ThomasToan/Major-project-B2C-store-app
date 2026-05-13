@@ -14,14 +14,16 @@ async function registerCustomer(page: Page, email: string, name = "Test User") {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Register" }).click();
+  await expect(page.getByTestId("account-status")).toContainText(name);
   await expect(page.getByTestId("account-status")).toContainText(email);
 }
 
-async function loginCustomer(page: Page, email: string) {
+async function loginCustomer(page: Page, email: string, name = "Test User") {
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Login" }).click();
+  await expect(page.getByTestId("account-status")).toContainText(name);
   await expect(page.getByTestId("account-status")).toContainText(email);
 }
 
@@ -56,9 +58,11 @@ test.beforeEach(async () => {
 test.describe("B2C CUSTOMER AUTH", () => {
   test("user can register", async ({ page }) => {
     const email = uniqueEmail("register");
+    const name = "Registered Customer";
 
-    await registerCustomer(page, email);
+    await registerCustomer(page, email, name);
 
+    await expect(page.getByTestId("account-status")).toContainText(name);
     await expect(page.getByTestId("account-status")).toContainText(email);
   });
 

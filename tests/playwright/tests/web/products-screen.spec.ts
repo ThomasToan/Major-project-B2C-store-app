@@ -18,7 +18,13 @@ test.describe("B2C PRODUCTS SCREEN", () => {
 
     const activeProducts = products.filter((product) => product.active);
     const inactiveProducts = products.filter((product) => !product.active);
+    const sidebar = page.getByRole("complementary");
 
+    await expect(sidebar.getByText("Thomas Store")).toBeVisible();
+    await expect(sidebar.getByTestId("store-nav-all-products")).toHaveAttribute(
+      "href",
+      "/products",
+    );
     await expect(page.getByRole("heading", { name: "Products" })).toBeVisible();
     await expect(page.getByTestId("product-card")).toHaveCount(
       activeProducts.length,
@@ -29,6 +35,15 @@ test.describe("B2C PRODUCTS SCREEN", () => {
     for (const product of inactiveProducts) {
       await expect(page.getByText(product.name)).not.toBeVisible();
     }
+  });
+
+  test("opens a category from the store sidebar", async ({ page }) => {
+    await page.goto("/products");
+
+    await page.getByTestId("store-category-electronics").click();
+
+    await expect(page).toHaveURL("/products?category=Electronics");
+    await expect(page.getByLabel("Category")).toHaveValue("Electronics");
   });
 
   test("searches products by name from the filter form", async ({ page }) => {

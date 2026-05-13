@@ -6,8 +6,9 @@ test.describe("B2C HOME SCREEN", () => {
 
     await expect(page.getByTestId("b2c-homepage")).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "B2C Store" }),
+      page.getByRole("heading", { name: "Thomas Store" }),
     ).toBeVisible();
+    await expect(page.getByText("Full Stack Blog")).toHaveCount(0);
     await expect(page.getByText("Welcome to the storefront.")).toBeVisible();
     await expect(page.getByText("Boost your conversion rate")).not.toBeVisible();
   });
@@ -26,15 +27,18 @@ test.describe("B2C HOME SCREEN", () => {
   test("has cart login and register links", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page.getByRole("link", { name: "Cart" })).toHaveAttribute(
+    const sidebar = page.getByRole("complementary");
+
+    await expect(sidebar.getByText("Thomas Store")).toBeVisible();
+    await expect(sidebar.getByTestId("store-nav-cart")).toHaveAttribute(
       "href",
       "/cart",
     );
-    await expect(page.getByRole("link", { name: "Login" })).toHaveAttribute(
+    await expect(sidebar.getByTestId("store-account-login")).toHaveAttribute(
       "href",
       "/login",
     );
-    await expect(page.getByRole("link", { name: "Register" })).toHaveAttribute(
+    await expect(sidebar.getByTestId("store-account-register")).toHaveAttribute(
       "href",
       "/register",
     );

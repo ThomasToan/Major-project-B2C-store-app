@@ -7,14 +7,22 @@ import {
 import { MoonIcon, SunIcon } from "@heroicons/react/24/solid"; // import icons for dark and light mode
 import { Button } from "@repo/ui/button";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useState } from "react";// there are Reack hooks: useState = store current input text, useEffect = react to prop changes, startTransition = perform navigations as a non-urgent UI update
+import { startTransition, useEffect, useMemo, useState } from "react";// there are Reack hooks: useState = store current input text, useEffect = react to prop changes, startTransition = perform navigations as a non-urgent UI update
 import { useTheme } from "../Themes/ThemeContext"; // This imports your custom theme hook
 
-function debounce<T extends (...args: Any[]) => Any>(fn: T, delay = 300) {
-  let timeoutId: Any;
-  return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+function getProductsSearchUrl(search: string) {
+  const trimmedSearch = search.trim();
+  return trimmedSearch
+    ? `/products?search=${encodeURIComponent(trimmedSearch)}`
+    : "/products";
+}
+
+function debounce(fn: (search: string) => void, delay = 300) {
+  let timeoutId: ReturnType<typeof setTimeout>;
+
+  return (search: string) => {
     clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn.apply(this, args), delay);
+    timeoutId = setTimeout(() => fn(search), delay);
   };
 }
 
@@ -24,11 +32,15 @@ export function TopMenu({ query }: { query?: string }) { // This defines the Top
   // if query exists, use it
   const { theme, toggleTheme } = useTheme();
 // theme = current theme, probably "light" or "dark", toggleTheme = function to switch between themes
-  const handleSearch = debounce((search: string) => {
-    startTransition(() => {
-      router.push(`/search?q=${encodeURIComponent(search)}`);
-    });
-  });
+  const handleSearch = useMemo(
+    () =>
+      debounce((search: string) => {
+        startTransition(() => {
+          router.push(getProductsSearchUrl(search));
+        });
+      }),
+    [router],
+  );
 
   useEffect(() => {
     setValue(query ?? "");
@@ -37,7 +49,15 @@ export function TopMenu({ query }: { query?: string }) { // This defines the Top
   return (
     <header className="sticky top-0 z-10 border-b border-[color:var(--border-color)] bg-[color:var(--surface-raised)]/95 px-4 py-3 backdrop-blur md:px-8">
       <div className="flex flex-col gap-3 lg:h-10 lg:flex-row lg:items-center">
-        <form action="#" className="grid flex-1 grid-cols-1" method="GET">
+        <form
+          action="/products"
+          className="grid flex-1 grid-cols-1"
+          method="GET"
+          onSubmit={(event) => {
+            event.preventDefault();
+            router.push(getProductsSearchUrl(value));
+          }}
+        >
           <div className="relative">
             <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-secondary" />
             <input
@@ -47,7 +67,8 @@ export function TopMenu({ query }: { query?: string }) { // This defines the Top
                 setValue(search);
                 handleSearch(search);
               }}
-              placeholder="Search"
+              name="search"
+              placeholder="Search products"
               type="search"
               value={value}
             />

@@ -28,7 +28,7 @@ export default async function ProductsPage({
   ]);
 
   return (
-    <AppLayout>
+    <AppLayout query={search}>
       <ProductCatalog
         categories={categories}
         category={category}

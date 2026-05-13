@@ -30,11 +30,10 @@ export default async function LoginPage({
           {customer ? (
             <div className="mt-6 space-y-4" data-test-id="account-status">
               <p className="text-secondary">
-                Logged in as{" "}
-                <span className="font-semibold text-primary">
-                  {customer.email}
-                </span>
+                Welcome{" "}
+                <span className="font-semibold text-primary">{customer.name}</span>
               </p>
+              <p className="text-secondary text-sm">{customer.email}</p>
               <LogoutButton />
             </div>
           ) : (

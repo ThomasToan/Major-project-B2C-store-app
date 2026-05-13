@@ -27,7 +27,7 @@ export function ProductCatalog({
         <div className="flex flex-col gap-4 border-b border-[color:var(--border-color)] pb-8 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-wsu text-sm font-semibold uppercase">
-              B2C Store
+              Thomas Store
             </p>
             <h1 className="text-primary mt-2 text-4xl font-bold">Products</h1>
             <p className="text-secondary mt-3 max-w-2xl text-base leading-7">
