@@ -1,11 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { Product as DatabaseProduct } from "@prisma/client";
 import { client } from "./client.js";
 import { type Post, posts as seedPosts } from "./data.js";
 
 export type StoredPost = Post & {
   liked?: boolean;
 };
+
+export type StoredProduct = DatabaseProduct;
 
 type SerializablePost = Omit<StoredPost, "date"> & {
   date: string;
@@ -141,13 +144,32 @@ function fromDatabasePost(post: Post): StoredPost {
 }
 
 export async function readPostsFromDatabase(): Promise<StoredPost[]> {
-  const posts = await client.db.post.findMany({ //Get many posts from the Prisma database
+  const posts = await client.db.post.findMany({
+    //Get many posts from the Prisma database
     orderBy: {
       date: "desc", // newest posts first
     },
   });
 
   return posts.map((post) => fromDatabasePost(post as Post)); //converts databse posts into the same shape your React components expect
+}
+
+export async function readActiveProductsFromDatabase(): Promise<
+  StoredProduct[]
+> {
+  return client.db.product.findMany({
+    where: {
+      active: true,
+    },
+    orderBy: [
+      {
+        category: "asc",
+      },
+      {
+        name: "asc",
+      },
+    ],
+  });
 }
 
 export async function getPostByUrlIdFromDatabase(urlId: string) {
@@ -200,11 +222,13 @@ export async function updatePostByUrlId(
   urlId: string, // tells Prisma which post to update
   input: EditablePostInput, // contains the new form values
 ) {
-  const updatedPost = await client.db.post.update({ // Starts a Prisma update query
-    where: { 
+  const updatedPost = await client.db.post.update({
+    // Starts a Prisma update query
+    where: {
       urlId, // finds the post by unique urlId
     },
-    data: { // these are the fields saved into database
+    data: {
+      // these are the fields saved into database
       title: input.title,
       category: input.category,
       description: input.description,
@@ -218,7 +242,8 @@ export async function updatePostByUrlId(
 }
 
 export async function createPostInDatabase(input: EditablePostInput) {
-  const createdPost = await client.db.post.create({ // starts Prisma create
+  const createdPost = await client.db.post.create({
+    // starts Prisma create
     data: {
       urlId: toUrlId(input.title), // calls line 191
       title: input.title,
@@ -238,17 +263,20 @@ export async function createPostInDatabase(input: EditablePostInput) {
 }
 
 export async function togglePostActive(urlId: string) {
-  const existingPost = await client.db.post.findUnique({ // this finds one post from databse using urlId
+  const existingPost = await client.db.post.findUnique({
+    // this finds one post from databse using urlId
     where: {
       urlId,
     },
   });
 
-  if (!existingPost) { // if no post exist, stop safely
+  if (!existingPost) {
+    // if no post exist, stop safely
     return undefined;
   }
 
-  const updatedPost = await client.db.post.update({ // Database update that flips active
+  const updatedPost = await client.db.post.update({
+    // Database update that flips active
     where: {
       urlId,
     },
