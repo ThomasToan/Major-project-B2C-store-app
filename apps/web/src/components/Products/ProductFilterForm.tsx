@@ -1,19 +1,25 @@
 "use client";
 
 import type { ChangeEvent, FormEvent } from "react";
+import { useEffect, useState } from "react";
 
-function getProductsUrl(form: HTMLFormElement) {
-  const formData = new FormData(form);
-  const search = formData.get("search")?.toString().trim() || "";
-  const category = formData.get("category")?.toString().trim() || "";
+function getProductsUrl({
+  category,
+  search,
+}: {
+  category: string;
+  search: string;
+}) {
   const params = new URLSearchParams();
+  const trimmedSearch = search.trim();
+  const trimmedCategory = category.trim();
 
-  if (search) {
-    params.set("search", search);
+  if (trimmedSearch) {
+    params.set("search", trimmedSearch);
   }
 
-  if (category) {
-    params.set("category", category);
+  if (trimmedCategory) {
+    params.set("category", trimmedCategory);
   }
 
   const query = params.toString();
@@ -29,17 +35,37 @@ export function ProductFilterForm({
   category: string;
   search: string;
 }) {
+  const [searchValue, setSearchValue] = useState(search);
+  const [categoryValue, setCategoryValue] = useState(category);
+
+  useEffect(() => {
+    setSearchValue(search);
+  }, [search]);
+
+  useEffect(() => {
+    setCategoryValue(category);
+  }, [category]);
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    window.location.assign(getProductsUrl(event.currentTarget));
+    window.location.assign(
+      getProductsUrl({
+        category: categoryValue,
+        search: searchValue,
+      }),
+    );
   }
 
   function handleCategoryChange(event: ChangeEvent<HTMLSelectElement>) {
-    const form = event.currentTarget.form;
+    const nextCategory = event.currentTarget.value;
 
-    if (form) {
-      window.location.assign(getProductsUrl(form));
-    }
+    setCategoryValue(nextCategory);
+    window.location.assign(
+      getProductsUrl({
+        category: nextCategory,
+        search: searchValue,
+      }),
+    );
   }
 
   return (
@@ -58,11 +84,12 @@ export function ProductFilterForm({
         </label>
         <input
           className="mt-2 w-full rounded-md border border-[color:var(--border-color)] bg-[color:var(--surface-raised)] px-3 py-2 text-sm text-primary outline-none focus:border-[color:var(--link)]"
-          defaultValue={search}
           id="product-search"
           name="search"
+          onChange={(event) => setSearchValue(event.currentTarget.value)}
           placeholder="Search by product name"
           type="search"
+          value={searchValue}
         />
       </div>
       <div>
@@ -74,10 +101,10 @@ export function ProductFilterForm({
         </label>
         <select
           className="mt-2 w-full rounded-md border border-[color:var(--border-color)] bg-[color:var(--surface-raised)] px-3 py-2 text-sm text-primary outline-none focus:border-[color:var(--link)]"
-          defaultValue={category}
           id="product-category"
           name="category"
           onChange={handleCategoryChange}
+          value={categoryValue}
         >
           <option value="">All</option>
           {categories.map((productCategory) => (
