@@ -4,6 +4,7 @@ import "dotenv/config";
 export default defineConfig({
   testDir: "./tests/web",
   testMatch: [
+    "**/b2c-home-screen.spec.ts",
     "**/products-screen.spec.ts",
     "**/cart-screen.spec.ts",
     "**/checkout-screen.spec.ts",
