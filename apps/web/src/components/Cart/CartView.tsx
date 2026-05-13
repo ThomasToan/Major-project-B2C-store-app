@@ -14,6 +14,10 @@ async function fetchCart() {
     cache: "no-store",
   });
 
+  if (response.status === 401) {
+    return "unauthorized" as const;
+  }
+
   if (!response.ok) {
     throw new Error("Could not load cart");
   }
@@ -22,7 +26,7 @@ async function fetchCart() {
 }
 
 export function CartView() {
-  const [cart, setCart] = useState<CartSummary | undefined>();
+  const [cart, setCart] = useState<CartSummary | "unauthorized" | undefined>();
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -64,6 +68,40 @@ export function CartView() {
       <main className="px-4 py-10 md:px-10 md:py-12">
         <div className="mx-auto w-full max-w-5xl">
           <p className="text-red-600">Could not load cart.</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (cart === "unauthorized") {
+    return (
+      <main className="px-4 py-10 md:px-10 md:py-12">
+        <div className="mx-auto w-full max-w-5xl">
+          <div
+            className="rounded-lg border border-[color:var(--border-color)] bg-[color:var(--surface-muted)] p-8 text-center"
+            data-test-id="cart-login-required"
+          >
+            <h1 className="text-primary text-3xl font-bold">
+              Login required
+            </h1>
+            <p className="text-secondary mt-3">
+              Please log in or register before using the cart.
+            </p>
+            <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link
+                className="rounded-md bg-wsu px-5 py-3 text-sm font-semibold text-white hover:bg-wsu-light"
+                href="/login?redirect=/cart"
+              >
+                Login
+              </Link>
+              <Link
+                className="rounded-md border border-[color:var(--border-color)] px-5 py-3 text-sm font-semibold text-primary"
+                href="/register?redirect=/cart"
+              >
+                Register
+              </Link>
+            </div>
+          </div>
         </div>
       </main>
     );

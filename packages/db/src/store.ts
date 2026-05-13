@@ -3,6 +3,7 @@ import path from "node:path";
 import type {
   Prisma,
   Product as DatabaseProduct,
+  User as DatabaseUser,
 } from "@prisma/client";
 import { client } from "./client.js";
 import { type Post, posts as seedPosts } from "./data.js";
@@ -12,6 +13,11 @@ export type StoredPost = Post & {
 };
 
 export type StoredProduct = DatabaseProduct;
+
+export type SafeCustomer = Pick<
+  DatabaseUser,
+  "id" | "name" | "email" | "role" | "createdAt"
+>;
 
 export type ProductFilters = {
   search?: string;
@@ -38,7 +44,8 @@ export type CartSummaryItem = {
 };
 
 export type CartSummary = {
-  sessionId: string;
+  sessionId: string | null;
+  userId: number | null;
   items: CartSummaryItem[];
   itemCount: number;
   total: number;
@@ -254,11 +261,12 @@ export async function readActiveProductCategoriesFromDatabase(): Promise<
   return categories.map((product) => product.category);
 }
 
-function emptyCartSummary(sessionId: string): CartSummary {
+function emptyCartSummary(sessionId: string | null, userId: number | null = null): CartSummary {
   return {
     itemCount: 0,
     items: [],
     sessionId,
+    userId,
     total: 0,
   };
 }
@@ -282,6 +290,7 @@ function toCartSummary(cart: CartWithItems): CartSummary {
     itemCount: items.reduce((total, item) => total + item.quantity, 0),
     items,
     sessionId: cart.sessionId,
+    userId: cart.userId,
     total: items.reduce((total, item) => total + item.subtotal, 0),
   };
 }
@@ -292,6 +301,83 @@ function normalizeSessionId(sessionId: string) {
 
 function normalizeQuantity(quantity: number) {
   return Math.max(1, Math.floor(quantity));
+}
+
+function toSafeCustomer(user: DatabaseUser): SafeCustomer {
+  return {
+    createdAt: user.createdAt,
+    email: user.email,
+    id: user.id,
+    name: user.name,
+    role: user.role,
+  };
+}
+
+export async function createCustomerUser(input: {
+  name: string;
+  email: string;
+  passwordHash: string;
+}) {
+  const user = await client.db.user.create({
+    data: {
+      email: input.email,
+      name: input.name,
+      passwordHash: input.passwordHash,
+    },
+  });
+
+  return toSafeCustomer(user);
+}
+
+export async function findCustomerUserByEmail(email: string) {
+  return client.db.user.findUnique({
+    where: {
+      email,
+    },
+  });
+}
+
+export async function createCustomerSession(input: {
+  sessionId: string;
+  userId: number;
+  expiresAt: Date;
+}) {
+  return client.db.customerSession.create({
+    data: input,
+  });
+}
+
+export async function getCustomerBySessionId(sessionId: string) {
+  const session = await client.db.customerSession.findUnique({
+    include: {
+      user: true,
+    },
+    where: {
+      sessionId,
+    },
+  });
+
+  if (!session || session.expiresAt <= new Date()) {
+    if (session) {
+      await client.db.customerSession.delete({
+        where: {
+          sessionId,
+        },
+      });
+    }
+
+    return undefined;
+  }
+
+  return toSafeCustomer(session.user);
+}
+
+export async function deleteCustomerSession(sessionId: string) {
+  await client.db.customerSession.deleteMany({
+    where: {
+      sessionId,
+    },
+  });
 }
 
 export async function getOrCreateCartBySessionId(sessionId: string) {
@@ -309,6 +395,24 @@ export async function getOrCreateCartBySessionId(sessionId: string) {
   return client.db.cart.create({
     data: {
       sessionId: normalizedSessionId,
+    },
+  });
+}
+
+export async function getOrCreateCartByUserId(userId: number) {
+  const existingCart = await client.db.cart.findUnique({
+    where: {
+      userId,
+    },
+  });
+
+  if (existingCart) {
+    return existingCart;
+  }
+
+  return client.db.cart.create({
+    data: {
+      userId,
     },
   });
 }
@@ -340,8 +444,32 @@ export async function getCartBySessionId(
   return toCartSummary(cart);
 }
 
-export async function addProductToCart(
-  sessionId: string,
+export async function getCartByUserId(userId: number): Promise<CartSummary> {
+  const cart = await client.db.cart.findUnique({
+    include: {
+      items: {
+        include: {
+          product: true,
+        },
+        orderBy: {
+          id: "asc",
+        },
+      },
+    },
+    where: {
+      userId,
+    },
+  });
+
+  if (!cart) {
+    return emptyCartSummary(null, userId);
+  }
+
+  return toCartSummary(cart);
+}
+
+async function addProductToCartRecord(
+  cartId: number,
   productId: number,
 ): Promise<CartSummary | undefined> {
   const product = await client.db.product.findFirst({
@@ -355,11 +483,9 @@ export async function addProductToCart(
     return undefined;
   }
 
-  const cart = await getOrCreateCartBySessionId(sessionId);
-
   await client.db.cartItem.upsert({
     create: {
-      cartId: cart.id,
+      cartId,
       productId,
       quantity: 1,
     },
@@ -370,13 +496,113 @@ export async function addProductToCart(
     },
     where: {
       cartId_productId: {
-        cartId: cart.id,
+        cartId,
         productId,
       },
     },
   });
 
-  return getCartBySessionId(sessionId);
+  const cart = await client.db.cart.findUniqueOrThrow({
+    where: {
+      id: cartId,
+    },
+  });
+
+  return cart.userId
+    ? getCartByUserId(cart.userId)
+    : getCartBySessionId(cart.sessionId || "");
+}
+
+export async function addProductToCart(
+  sessionId: string,
+  productId: number,
+): Promise<CartSummary | undefined> {
+  const cart = await getOrCreateCartBySessionId(sessionId);
+  return addProductToCartRecord(cart.id, productId);
+}
+
+export async function addProductToUserCart(
+  userId: number,
+  productId: number,
+): Promise<CartSummary | undefined> {
+  const cart = await getOrCreateCartByUserId(userId);
+  return addProductToCartRecord(cart.id, productId);
+}
+
+export async function mergeGuestCartIntoUserCart(
+  sessionId: string | undefined,
+  userId: number,
+): Promise<CartSummary> {
+  const normalizedSessionId = sessionId?.trim();
+
+  if (!normalizedSessionId) {
+    await getOrCreateCartByUserId(userId);
+    return getCartByUserId(userId);
+  }
+
+  const guestCart = await client.db.cart.findUnique({
+    include: {
+      items: true,
+    },
+    where: {
+      sessionId: normalizedSessionId,
+    },
+  });
+  const userCart = await getOrCreateCartByUserId(userId);
+
+  if (!guestCart || guestCart.id === userCart.id) {
+    return getCartByUserId(userId);
+  }
+
+  for (const item of guestCart.items) {
+    await client.db.cartItem.upsert({
+      create: {
+        cartId: userCart.id,
+        productId: item.productId,
+        quantity: item.quantity,
+      },
+      update: {
+        quantity: {
+          increment: item.quantity,
+        },
+      },
+      where: {
+        cartId_productId: {
+          cartId: userCart.id,
+          productId: item.productId,
+        },
+      },
+    });
+  }
+
+  await client.db.cartItem.deleteMany({
+    where: {
+      cartId: guestCart.id,
+    },
+  });
+  await client.db.cart.delete({
+    where: {
+      id: guestCart.id,
+    },
+  });
+
+  return getCartByUserId(userId);
+}
+
+async function updateCartItemQuantityForCart(
+  cartId: number,
+  productId: number,
+  quantity: number,
+): Promise<void> {
+  await client.db.cartItem.updateMany({
+    data: {
+      quantity: normalizeQuantity(quantity),
+    },
+    where: {
+      cartId,
+      productId,
+    },
+  });
 }
 
 export async function updateCartItemQuantity(
@@ -386,17 +612,31 @@ export async function updateCartItemQuantity(
 ): Promise<CartSummary> {
   const cart = await getOrCreateCartBySessionId(sessionId);
 
-  await client.db.cartItem.updateMany({
-    data: {
-      quantity: normalizeQuantity(quantity),
-    },
+  await updateCartItemQuantityForCart(cart.id, productId, quantity);
+  return getCartBySessionId(sessionId);
+}
+
+export async function updateUserCartItemQuantity(
+  userId: number,
+  productId: number,
+  quantity: number,
+): Promise<CartSummary> {
+  const cart = await getOrCreateCartByUserId(userId);
+
+  await updateCartItemQuantityForCart(cart.id, productId, quantity);
+  return getCartByUserId(userId);
+}
+
+async function removeCartItemForCart(
+  cartId: number,
+  productId: number,
+): Promise<void> {
+  await client.db.cartItem.deleteMany({
     where: {
-      cartId: cart.id,
+      cartId,
       productId,
     },
   });
-
-  return getCartBySessionId(sessionId);
 }
 
 export async function removeCartItem(
@@ -405,14 +645,18 @@ export async function removeCartItem(
 ): Promise<CartSummary> {
   const cart = await getOrCreateCartBySessionId(sessionId);
 
-  await client.db.cartItem.deleteMany({
-    where: {
-      cartId: cart.id,
-      productId,
-    },
-  });
-
+  await removeCartItemForCart(cart.id, productId);
   return getCartBySessionId(sessionId);
+}
+
+export async function removeUserCartItem(
+  userId: number,
+  productId: number,
+): Promise<CartSummary> {
+  const cart = await getOrCreateCartByUserId(userId);
+
+  await removeCartItemForCart(cart.id, productId);
+  return getCartByUserId(userId);
 }
 
 export async function clearCart(sessionId: string): Promise<CartSummary> {
@@ -425,6 +669,18 @@ export async function clearCart(sessionId: string): Promise<CartSummary> {
   });
 
   return getCartBySessionId(sessionId);
+}
+
+export async function clearUserCart(userId: number): Promise<CartSummary> {
+  const cart = await getOrCreateCartByUserId(userId);
+
+  await client.db.cartItem.deleteMany({
+    where: {
+      cartId: cart.id,
+    },
+  });
+
+  return getCartByUserId(userId);
 }
 
 export async function getPostByUrlIdFromDatabase(urlId: string) {

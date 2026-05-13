@@ -1,10 +1,10 @@
 import {
-  addProductToCart,
-  removeCartItem,
-  updateCartItemQuantity,
+  addProductToUserCart,
+  removeUserCartItem,
+  updateUserCartItemQuantity,
 } from "@repo/db/store";
 import { NextRequest, NextResponse } from "next/server";
-import { getCartSession, setCartSessionCookie } from "@/functions/cartSession";
+import { getCustomerFromRequest } from "@/functions/customerSession";
 
 export const runtime = "nodejs";
 
@@ -26,56 +26,65 @@ async function readJsonBody(request: NextRequest) {
   }
 }
 
-function cartResponse(cart: unknown, sessionId: string, status = 200) {
-  const response = NextResponse.json(cart, { status });
-  setCartSessionCookie(response, sessionId);
-  return response;
+function cartResponse(cart: unknown, status = 200) {
+  return NextResponse.json(cart, { status });
 }
 
 export async function POST(request: NextRequest) {
-  const { sessionId } = getCartSession(request);
+  const customer = await getCustomerFromRequest(request);
   const body = await readJsonBody(request);
   const productId = toPositiveInteger(body.productId);
 
-  if (!productId) {
-    return cartResponse({ message: "Invalid product id" }, sessionId, 400);
+  if (!customer) {
+    return cartResponse({ message: "Unauthorized" }, 401);
   }
 
-  const cart = await addProductToCart(sessionId, productId);
+  if (!productId) {
+    return cartResponse({ message: "Invalid product id" }, 400);
+  }
+
+  const cart = await addProductToUserCart(customer.id, productId);
 
   if (!cart) {
-    return cartResponse({ message: "Product not found" }, sessionId, 404);
+    return cartResponse({ message: "Product not found" }, 404);
   }
 
-  return cartResponse(cart, sessionId);
+  return cartResponse(cart);
 }
 
 export async function PATCH(request: NextRequest) {
-  const { sessionId } = getCartSession(request);
+  const customer = await getCustomerFromRequest(request);
   const body = await readJsonBody(request);
   const productId = toPositiveInteger(body.productId);
   const quantity = toPositiveInteger(body.quantity);
 
+  if (!customer) {
+    return cartResponse({ message: "Unauthorized" }, 401);
+  }
+
   if (!productId || !quantity) {
-    return cartResponse({ message: "Invalid cart item" }, sessionId, 400);
+    return cartResponse({ message: "Invalid cart item" }, 400);
   }
 
   return cartResponse(
-    await updateCartItemQuantity(sessionId, productId, quantity),
-    sessionId,
+    await updateUserCartItemQuantity(customer.id, productId, quantity),
   );
 }
 
 export async function DELETE(request: NextRequest) {
-  const { sessionId } = getCartSession(request);
+  const customer = await getCustomerFromRequest(request);
   const body = await readJsonBody(request);
   const productId = toPositiveInteger(
     body.productId ?? request.nextUrl.searchParams.get("productId"),
   );
 
-  if (!productId) {
-    return cartResponse({ message: "Invalid product id" }, sessionId, 400);
+  if (!customer) {
+    return cartResponse({ message: "Unauthorized" }, 401);
   }
 
-  return cartResponse(await removeCartItem(sessionId, productId), sessionId);
+  if (!productId) {
+    return cartResponse({ message: "Invalid product id" }, 400);
+  }
+
+  return cartResponse(await removeUserCartItem(customer.id, productId));
 }

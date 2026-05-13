@@ -33,3 +33,13 @@ export function setCartSessionCookie(
     secure: process.env.NODE_ENV === "production",
   });
 }
+
+export function clearCartSessionCookie(response: NextResponse) {
+  response.cookies.set(CART_SESSION_COOKIE, "", {
+    httpOnly: true,
+    maxAge: 0,
+    path: "/",
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+}

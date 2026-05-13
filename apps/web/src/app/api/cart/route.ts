@@ -1,16 +1,16 @@
-import { getCartBySessionId, getOrCreateCartBySessionId } from "@repo/db/store";
+import { getCartByUserId, getOrCreateCartByUserId } from "@repo/db/store";
 import { NextRequest, NextResponse } from "next/server";
-import { getCartSession, setCartSessionCookie } from "@/functions/cartSession";
+import { getCustomerFromRequest } from "@/functions/customerSession";
 
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
-  const { sessionId } = getCartSession(request);
+  const customer = await getCustomerFromRequest(request);
 
-  await getOrCreateCartBySessionId(sessionId);
+  if (!customer) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
 
-  const response = NextResponse.json(await getCartBySessionId(sessionId));
-  setCartSessionCookie(response, sessionId);
-
-  return response;
+  await getOrCreateCartByUserId(customer.id);
+  return NextResponse.json(await getCartByUserId(customer.id));
 }

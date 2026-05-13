@@ -19,6 +19,13 @@ export function AddToCartButton({ productId }: { productId: number }) {
       method: "POST",
     });
 
+    if (response.status === 401) {
+      window.location.assign(
+        `/login?redirect=${encodeURIComponent(window.location.pathname)}`,
+      );
+      return;
+    }
+
     setState(response.ok ? "added" : "error");
   }
 

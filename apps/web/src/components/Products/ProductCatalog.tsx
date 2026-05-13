@@ -1,5 +1,6 @@
 import type { StoredProduct } from "@repo/db/store";
 import Link from "next/link";
+import { CustomerAccountNav } from "../CustomerAuth/CustomerAccountNav";
 import { ProductFilterForm } from "./ProductFilterForm";
 
 const currencyFormatter = new Intl.NumberFormat("en-AU", {
@@ -33,9 +34,12 @@ export function ProductCatalog({
               Browse the active products currently available in the store.
             </p>
           </div>
-          <p className="text-secondary text-sm font-medium">
-            {productCount} {productCount === 1 ? "product" : "products"}
-          </p>
+          <div className="flex flex-col gap-3 md:items-end">
+            <CustomerAccountNav className="w-full md:w-80" />
+            <p className="text-secondary text-sm font-medium">
+              {productCount} {productCount === 1 ? "product" : "products"}
+            </p>
+          </div>
         </div>
 
         <ProductFilterForm

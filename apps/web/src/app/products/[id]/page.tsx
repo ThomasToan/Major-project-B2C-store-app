@@ -1,5 +1,6 @@
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { AddToCartButton } from "@/components/Cart/AddToCartButton";
+import { CustomerAccountNav } from "@/components/CustomerAuth/CustomerAccountNav";
 import { getActiveProductById } from "@/functions/products";
 import { notFound } from "next/navigation";
 
@@ -34,12 +35,15 @@ export default async function ProductDetailPage({
     <AppLayout>
       <main className="px-4 py-10 md:px-10 md:py-12">
         <div className="mx-auto w-full max-w-6xl">
-          <a
-            className="text-secondary text-sm font-semibold hover:text-primary"
-            href="/products"
-          >
-            Back to products
-          </a>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <a
+              className="text-secondary text-sm font-semibold hover:text-primary"
+              href="/products"
+            >
+              Back to products
+            </a>
+            <CustomerAccountNav className="w-full sm:w-80" />
+          </div>
 
           <article
             className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(22rem,0.95fr)] lg:items-start"

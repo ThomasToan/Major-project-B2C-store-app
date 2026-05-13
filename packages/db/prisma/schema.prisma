@@ -49,14 +49,39 @@ model Product {
   cartItems     CartItem[]
 }
 
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("CUSTOMER")
+  createdAt    DateTime @default(now())
+
+  carts     Cart[]
+  purchases Purchase[]
+  sessions  CustomerSession[]
+}
+
+model CustomerSession {
+  id        Int      @id @default(autoincrement())
+  sessionId String   @unique
+  userId    Int
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model Purchase {
   id          Int      @id @default(autoincrement())
   customerName  String
   customerEmail String
   totalAmount   Float
+  userId        Int?
   createdAt     DateTime @default(now())
 
   items PurchaseItem[]
+  user  User?          @relation(fields: [userId], references: [id])
 }
 
 model PurchaseItem {
@@ -72,10 +97,12 @@ model PurchaseItem {
 
 model Cart {
   id        Int      @id @default(autoincrement())
-  sessionId String   @unique
+  sessionId String?  @unique
+  userId    Int?     @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  user  User?      @relation(fields: [userId], references: [id])
   items CartItem[]
 }
 

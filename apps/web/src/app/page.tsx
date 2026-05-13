@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CustomerAccountNav } from "@/components/CustomerAuth/CustomerAccountNav";
 import { AppLayout } from "../components/Layout/AppLayout";
 
 const features = [
@@ -18,7 +19,7 @@ const features = [
 
 export const dynamic = "force-dynamic";
 
-export default function Home() {
+export default async function Home() {
   return (
     <AppLayout>
       <main className="px-4 py-10 md:px-10 md:py-12">
@@ -41,6 +42,7 @@ export default function Home() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <CustomerAccountNav className="sm:col-span-2 lg:col-span-1" />
               <Link
                 className="rounded-md bg-wsu px-5 py-3 text-center text-sm font-semibold text-white hover:bg-wsu-light"
                 href="/products"
@@ -53,20 +55,6 @@ export default function Home() {
               >
                 Cart
               </Link>
-              <div className="grid grid-cols-2 gap-3 sm:col-span-2 lg:col-span-1">
-                <Link
-                  className="rounded-md border border-[color:var(--border-color)] px-5 py-3 text-center text-sm font-semibold text-primary"
-                  href="/login"
-                >
-                  Login
-                </Link>
-                <Link
-                  className="rounded-md border border-[color:var(--border-color)] px-5 py-3 text-center text-sm font-semibold text-primary"
-                  href="/register"
-                >
-                  Register
-                </Link>
-              </div>
             </div>
           </section>
 

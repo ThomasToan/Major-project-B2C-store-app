@@ -7,6 +7,7 @@ export default defineConfig({
     "**/b2c-home-screen.spec.ts",
     "**/products-screen.spec.ts",
     "**/cart-screen.spec.ts",
+    "**/customer-auth-screen.spec.ts",
     "**/checkout-screen.spec.ts",
   ],
   fullyParallel: false,
