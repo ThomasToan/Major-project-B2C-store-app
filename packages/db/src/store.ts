@@ -34,6 +34,16 @@ type CartWithItems = Prisma.CartGetPayload<{
   };
 }>;
 
+type PurchaseWithItems = Prisma.PurchaseGetPayload<{
+  include: {
+    items: {
+      include: {
+        product: true;
+      };
+    };
+  };
+}>;
+
 export type CartSummaryItem = {
   id: number;
   productId: number;
@@ -50,6 +60,40 @@ export type CartSummary = {
   itemCount: number;
   total: number;
 };
+
+export type PurchaseSummaryItem = {
+  id: number;
+  productId: number;
+  quantity: number;
+  unitPrice: number;
+  product: StoredProduct;
+};
+
+export type PurchaseSummary = {
+  id: number;
+  userId: number | null;
+  customerName: string;
+  customerEmail: string;
+  totalAmount: number;
+  createdAt: Date;
+  items: PurchaseSummaryItem[];
+};
+
+export type CheckoutErrorCode =
+  | "EMPTY_CART"
+  | "INSUFFICIENT_STOCK"
+  | "PRODUCT_INACTIVE"
+  | "USER_NOT_FOUND";
+
+export class CheckoutError extends Error {
+  code: CheckoutErrorCode;
+
+  constructor(code: CheckoutErrorCode, message: string) {
+    super(message);
+    this.code = code;
+    this.name = "CheckoutError";
+  }
+}
 
 type SerializablePost = Omit<StoredPost, "date"> & {
   date: string;
@@ -292,6 +336,24 @@ function toCartSummary(cart: CartWithItems): CartSummary {
     sessionId: cart.sessionId,
     userId: cart.userId,
     total: items.reduce((total, item) => total + item.subtotal, 0),
+  };
+}
+
+function toPurchaseSummary(purchase: PurchaseWithItems): PurchaseSummary {
+  return {
+    createdAt: purchase.createdAt,
+    customerEmail: purchase.customerEmail,
+    customerName: purchase.customerName,
+    id: purchase.id,
+    items: purchase.items.map((item) => ({
+      id: item.id,
+      product: item.product,
+      productId: item.productId,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+    })),
+    totalAmount: purchase.totalAmount,
+    userId: purchase.userId,
   };
 }
 
@@ -681,6 +743,108 @@ export async function clearUserCart(userId: number): Promise<CartSummary> {
   });
 
   return getCartByUserId(userId);
+}
+
+export async function checkoutUserCart(userId: number): Promise<PurchaseSummary> {
+  return client.db.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new CheckoutError("USER_NOT_FOUND", "Customer account was not found.");
+    }
+
+    const cart = await tx.cart.findUnique({
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+          orderBy: {
+            id: "asc",
+          },
+        },
+      },
+      where: {
+        userId,
+      },
+    });
+
+    if (!cart || cart.items.length === 0) {
+      throw new CheckoutError("EMPTY_CART", "Your cart is empty.");
+    }
+
+    for (const item of cart.items) {
+      if (!item.product.active) {
+        throw new CheckoutError(
+          "PRODUCT_INACTIVE",
+          `${item.product.name} is no longer available.`,
+        );
+      }
+
+      if (item.product.stock < item.quantity) {
+        throw new CheckoutError(
+          "INSUFFICIENT_STOCK",
+          `Insufficient stock for ${item.product.name}.`,
+        );
+      }
+    }
+
+    const totalAmount = cart.items.reduce(
+      (total, item) => total + item.product.price * item.quantity,
+      0,
+    );
+
+    const purchase = await tx.purchase.create({
+      data: {
+        customerEmail: user.email,
+        customerName: user.name,
+        items: {
+          create: cart.items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: item.product.price,
+          })),
+        },
+        totalAmount,
+        userId,
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+          orderBy: {
+            id: "asc",
+          },
+        },
+      },
+    });
+
+    for (const item of cart.items) {
+      await tx.product.update({
+        data: {
+          stock: {
+            decrement: item.quantity,
+          },
+        },
+        where: {
+          id: item.productId,
+        },
+      });
+    }
+
+    await tx.cartItem.deleteMany({
+      where: {
+        cartId: cart.id,
+      },
+    });
+
+    return toPurchaseSummary(purchase);
+  });
 }
 
 export async function getPostByUrlIdFromDatabase(urlId: string) {

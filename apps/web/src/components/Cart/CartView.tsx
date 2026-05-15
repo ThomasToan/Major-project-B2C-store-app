@@ -240,7 +240,7 @@ export function CartView() {
                 </span>
               </div>
               <Link
-                className="mt-5 block rounded-md bg-[color:var(--text-primary)] px-4 py-3 text-center text-sm font-semibold text-[color:var(--surface-raised)]"
+                className="mt-5 block rounded-md bg-wsu px-4 py-3 text-center text-sm font-semibold text-white shadow-sm hover:bg-wsu-light"
                 href="/checkout"
               >
                 Checkout
