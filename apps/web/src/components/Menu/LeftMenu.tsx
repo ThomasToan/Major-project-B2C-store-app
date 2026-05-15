@@ -20,6 +20,10 @@ const categoryLinks = ["Electronics", "Clothing", "Accessories", "Home"];
 
 const accountLinks = [
   {
+    href: "/purchases",
+    label: "My Orders",
+  },
+  {
     href: "/login",
     label: "Login",
   },

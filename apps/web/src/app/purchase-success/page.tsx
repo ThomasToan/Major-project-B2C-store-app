@@ -52,6 +52,12 @@ export default async function PurchaseSuccessPage({
               >
                 View cart
               </Link>
+              <Link
+                className="rounded-md border border-[color:var(--border-color)] px-5 py-3 text-sm font-semibold text-primary"
+                href="/purchases"
+              >
+                View My Orders
+              </Link>
             </div>
           </section>
         </div>

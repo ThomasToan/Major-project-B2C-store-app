@@ -66,6 +66,7 @@ export type PurchaseSummaryItem = {
   productId: number;
   quantity: number;
   unitPrice: number;
+  subtotal: number;
   product: StoredProduct;
 };
 
@@ -350,6 +351,7 @@ function toPurchaseSummary(purchase: PurchaseWithItems): PurchaseSummary {
       product: item.product,
       productId: item.productId,
       quantity: item.quantity,
+      subtotal: item.unitPrice * item.quantity,
       unitPrice: item.unitPrice,
     })),
     totalAmount: purchase.totalAmount,
@@ -845,6 +847,31 @@ export async function checkoutUserCart(userId: number): Promise<PurchaseSummary>
 
     return toPurchaseSummary(purchase);
   });
+}
+
+export async function getPurchasesForUser(
+  userId: number,
+): Promise<PurchaseSummary[]> {
+  const purchases = await client.db.purchase.findMany({
+    include: {
+      items: {
+        include: {
+          product: true,
+        },
+        orderBy: {
+          id: "asc",
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    where: {
+      userId,
+    },
+  });
+
+  return purchases.map(toPurchaseSummary);
 }
 
 export async function getPostByUrlIdFromDatabase(urlId: string) {

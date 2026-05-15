@@ -9,6 +9,7 @@ export default defineConfig({
     "**/cart-screen.spec.ts",
     "**/customer-auth-screen.spec.ts",
     "**/checkout-screen.spec.ts",
+    "**/purchases-screen.spec.ts",
   ],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
