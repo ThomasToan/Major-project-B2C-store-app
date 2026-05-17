@@ -1,15 +1,16 @@
 import { client } from "./client.js";
-import { posts } from "./data.js";
+import { posts, products } from "./data.js";
 import { resetPosts } from "./store.js";
 
 export async function seed() {
   resetPosts();
-// This clears old test data
+  // This clears old test data
   await client.db.like.deleteMany();
   await client.db.post.deleteMany();
 
   for (const post of posts) {
-    await client.db.post.create({ // This inserts each seeded post into the databse and keeps its original active value
+    await client.db.post.create({
+      // This inserts each seeded post into the databse and keeps its original active value
       data: {
         id: post.id,
         urlId: post.urlId,
@@ -37,5 +38,23 @@ export async function seed() {
         },
       });
     }
+  }
+
+  await seedProducts();
+}
+
+export async function seedProducts() {
+  await client.db.cartItem.deleteMany();
+  await client.db.cart.deleteMany();
+  await client.db.customerSession.deleteMany();
+  await client.db.purchaseItem.deleteMany();
+  await client.db.purchase.deleteMany();
+  await client.db.user.deleteMany();
+  await client.db.product.deleteMany();
+
+  for (const product of products) {
+    await client.db.product.create({
+      data: product,
+    });
   }
 }

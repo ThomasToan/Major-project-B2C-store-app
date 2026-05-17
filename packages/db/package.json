@@ -7,6 +7,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:push": "prisma db push",
+    "seed": "pnpm build && node -e \"require('./dist/seed.js').seed().then(() => process.exit(0)).catch((error) => { console.error(error); process.exit(1); })\"",
     "lint": "eslint . --max-warnings 0",
     "prebuild": "pnpm db:generate",
     "predev": "pnpm db:generate",

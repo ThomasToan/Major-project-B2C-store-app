@@ -1,23 +1,87 @@
-import { readPosts } from "@repo/db/store"; // get all posts
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { CategoryList } from "./CategoryList";
-import { HistoryList } from "./HistoryList";
-import { TagList } from "./TagList";
-// 3 sidebar sections CategoryList show categories, HistoryList show year/month, TagList show tags
-export function LeftMenu({
-  selectedCategory,
-  selectedTag,
-  selectedYear,
-  selectedMonth,
+
+const shopLinks = [
+  {
+    href: "/",
+    label: "Home",
+  },
+  {
+    href: "/products",
+    label: "All Products",
+  },
+  {
+    href: "/cart",
+    label: "Cart",
+  },
+];
+
+const categoryLinks = ["Electronics", "Clothing", "Accessories", "Home"];
+
+const accountLinks = [
+  {
+    href: "/purchases",
+    label: "My Orders",
+  },
+  {
+    href: "/login",
+    label: "Login",
+  },
+  {
+    href: "/register",
+    label: "Register",
+  },
+];
+
+function toTestId(value: string) {
+  return value.toLowerCase().replace(/\s+/g, "-");
+}
+
+function SidebarSection({
+  children,
+  title,
 }: {
+  children: ReactNode;
+  title: string;
+}) {
+  return (
+    <section>
+      <h2 className="text-xs font-semibold uppercase text-secondary">
+        {title}
+      </h2>
+      <div className="mt-3 grid gap-1">{children}</div>
+    </section>
+  );
+}
+
+function SidebarLink({
+  href,
+  label,
+  testId,
+}: {
+  href: string;
+  label: string;
+  testId?: string;
+}) {
+  return (
+    <Link
+      className="rounded-md px-3 py-2 text-sm font-semibold text-primary transition hover:bg-[color:var(--surface-raised)]"
+      data-test-id={testId}
+      href={href}
+    >
+      {label}
+    </Link>
+  );
+}
+
+type LeftMenuProps = {
   selectedCategory?: string;
   selectedTag?: string;
   selectedYear?: string;
   selectedMonth?: string;
-  // this component recerives props
-}) {
-  const posts = readPosts(); //get all posts
+};
 
+export function LeftMenu(_props: LeftMenuProps) {
   return (
     <aside className="w-full border-b border-[color:var(--border-color)] bg-[color:var(--surface-muted)] md:sticky md:top-0 md:h-screen md:border-b-0 md:border-r">
       <div className="flex h-full flex-col px-7 py-5 md:overflow-y-auto">
@@ -28,28 +92,46 @@ export function LeftMenu({
             src="/wsulogo.png"
           />
           <div>
-            <p className="text-xl font-bold tracking-[-0.03em] text-primary">
-              Full Stack Blog
+            <p className="text-xl font-bold text-primary">Thomas Store</p>
+            <p className="text-secondary text-xs font-medium">
+              B2C storefront
             </p>
           </div>
         </Link>
-        <nav className="mt-12 flex flex-1 flex-col gap-9">
-          <CategoryList posts={posts} selectedCategory={selectedCategory} />{/* pass posts and selected category to CategoryList */}
-          <HistoryList 
-            posts={posts}
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-          /> {/* pass posts, selected month and year to HistoryList */}
-          <TagList posts={posts} selectedTag={selectedTag} /> {/* pass posts and selected tag to TagList */}
+        <nav className="mt-12 flex flex-1 flex-col gap-8">
+          <SidebarSection title="Shop">
+            {shopLinks.map((item) => (
+              <SidebarLink
+                href={item.href}
+                key={item.href}
+                label={item.label}
+                testId={`store-nav-${toTestId(item.label)}`}
+              />
+            ))}
+          </SidebarSection>
+
+          <SidebarSection title="Categories">
+            {categoryLinks.map((category) => (
+              <SidebarLink
+                href={`/products?category=${encodeURIComponent(category)}`}
+                key={category}
+                label={category}
+                testId={`store-category-${category.toLowerCase()}`}
+              />
+            ))}
+          </SidebarSection>
+
+          <SidebarSection title="Account">
+            {accountLinks.map((item) => (
+              <SidebarLink
+                href={item.href}
+                key={item.href}
+                label={item.label}
+                testId={`store-account-${item.label.toLowerCase()}`}
+              />
+            ))}
+          </SidebarSection>
         </nav>
-        <div className="mt-8 border-t border-[color:var(--border-color)] pt-5">
-          <Link
-            className="inline-flex rounded-lg border border-[color:var(--border-color)] px-4 py-2 text-sm font-medium text-secondary transition hover:bg-[color:var(--surface-raised)] hover:text-primary"
-            href="/admin"
-          >
-            Admin
-          </Link>
-        </div>
       </div>
     </aside>
   );

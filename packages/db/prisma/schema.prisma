@@ -33,3 +33,87 @@ model Like {
 
   @@id([postId, userIP])
 }
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  imageUrl    String
+  category    String
+  stock       Int
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  purchaseItems PurchaseItem[]
+  cartItems     CartItem[]
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("CUSTOMER")
+  createdAt    DateTime @default(now())
+
+  carts     Cart[]
+  purchases Purchase[]
+  sessions  CustomerSession[]
+}
+
+model CustomerSession {
+  id        Int      @id @default(autoincrement())
+  sessionId String   @unique
+  userId    Int
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Purchase {
+  id          Int      @id @default(autoincrement())
+  customerName  String
+  customerEmail String
+  totalAmount   Float
+  userId        Int?
+  createdAt     DateTime @default(now())
+
+  items PurchaseItem[]
+  user  User?          @relation(fields: [userId], references: [id])
+}
+
+model PurchaseItem {
+  id         Int   @id @default(autoincrement())
+  purchaseId Int
+  productId  Int
+  quantity   Int
+  unitPrice  Float
+
+  purchase Purchase @relation(fields: [purchaseId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+}
+
+model Cart {
+  id        Int      @id @default(autoincrement())
+  sessionId String?  @unique
+  userId    Int?     @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User?      @relation(fields: [userId], references: [id])
+  items CartItem[]
+}
+
+model CartItem {
+  id        Int @id @default(autoincrement())
+  cartId    Int
+  productId Int
+  quantity  Int
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
+}
