@@ -1,4 +1,4 @@
-import { createProductForAdmin } from "@repo/db/store";
+import { getProductForAdmin, updateProductForAdmin } from "@repo/db/store";
 import { NextRequest, NextResponse } from "next/server";
 import {
   type AdminProductRequestBody,
@@ -18,7 +18,14 @@ async function readJsonBody(
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function PATCH(
+  request: NextRequest,
+  {
+    params,
+  }: {
+    params: Promise<{ id: string }>;
+  },
+) {
   const admin = await requireAdmin();
 
   if (!admin) {
@@ -30,13 +37,32 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const { id } = await params;
+  const productId = Number(id);
+
+  if (!Number.isInteger(productId) || productId < 1) {
+    return NextResponse.json(
+      { message: "Invalid product id." },
+      { status: 400 },
+    );
+  }
+
+  const existingProduct = await getProductForAdmin(productId);
+
+  if (!existingProduct) {
+    return NextResponse.json(
+      { message: "Product not found." },
+      { status: 404 },
+    );
+  }
+
   const validation = validateAdminProductInput(await readJsonBody(request));
 
   if ("message" in validation) {
     return NextResponse.json({ message: validation.message }, { status: 400 });
   }
 
-  const product = await createProductForAdmin(validation.data);
+  const product = await updateProductForAdmin(productId, validation.data);
 
-  return NextResponse.json({ product }, { status: 201 });
+  return NextResponse.json({ product });
 }

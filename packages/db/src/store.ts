@@ -294,6 +294,16 @@ export async function getAllProductsForAdmin(): Promise<StoredProduct[]> {
   });
 }
 
+export async function getProductForAdmin(
+  id: number,
+): Promise<StoredProduct | null> {
+  return client.db.product.findUnique({
+    where: {
+      id,
+    },
+  });
+}
+
 export async function createProductForAdmin(
   input: AdminProductInput,
 ): Promise<StoredProduct> {
@@ -306,6 +316,26 @@ export async function createProductForAdmin(
       name: input.name,
       price: input.price,
       stock: input.stock,
+    },
+  });
+}
+
+export async function updateProductForAdmin(
+  id: number,
+  input: AdminProductInput,
+): Promise<StoredProduct> {
+  return client.db.product.update({
+    data: {
+      active: input.active,
+      category: input.category,
+      description: input.description,
+      imageUrl: input.imageUrl,
+      name: input.name,
+      price: input.price,
+      stock: input.stock,
+    },
+    where: {
+      id,
     },
   });
 }

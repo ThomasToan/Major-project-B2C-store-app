@@ -5,9 +5,34 @@ import type { FormEvent } from "react";
 
 type FormState = "idle" | "submitting" | "success" | "error";
 
-export function CreateProductForm() {
+type ProductFormProduct = {
+  active: boolean;
+  category: string;
+  description: string;
+  id: number;
+  imageUrl: string;
+  name: string;
+  price: number;
+  stock: number;
+};
+
+type CreateProductFormProps = {
+  mode?: "create" | "edit";
+  product?: ProductFormProduct;
+};
+
+export function CreateProductForm({
+  mode = "create",
+  product,
+}: CreateProductFormProps) {
   const [message, setMessage] = useState("");
   const [state, setState] = useState<FormState>("idle");
+  const isEdit = mode === "edit";
+  const actionUrl = isEdit
+    ? `/api/admin/products/${product?.id}`
+    : "/api/admin/products";
+  const submitLabel = isEdit ? "Save Changes" : "Create Product";
+  const submittingLabel = isEdit ? "Saving changes..." : "Creating product...";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -15,7 +40,7 @@ export function CreateProductForm() {
     setMessage("");
 
     const formData = new FormData(event.currentTarget);
-    const response = await fetch("/api/admin/products", {
+    const response = await fetch(actionUrl, {
       body: JSON.stringify({
         active: formData.get("active") === "on",
         category: formData.get("category"),
@@ -28,7 +53,7 @@ export function CreateProductForm() {
       headers: {
         "Content-Type": "application/json",
       },
-      method: "POST",
+      method: isEdit ? "PATCH" : "POST",
     });
 
     if (!response.ok) {
@@ -41,14 +66,14 @@ export function CreateProductForm() {
     }
 
     setState("success");
-    setMessage("Product created.");
+    setMessage(isEdit ? "Product updated." : "Product created.");
     window.location.assign("/admin/products");
   }
 
   return (
     <form
       className="mt-8 grid gap-5 rounded-lg border border-[color:var(--border-color)] bg-[color:var(--surface-muted)] p-6"
-      data-test-id="create-product-form"
+      data-test-id={isEdit ? "edit-product-form" : "create-product-form"}
       onSubmit={handleSubmit}
     >
       <div>
@@ -60,6 +85,7 @@ export function CreateProductForm() {
           id="name"
           name="name"
           required
+          defaultValue={product?.name}
           type="text"
         />
       </div>
@@ -76,6 +102,7 @@ export function CreateProductForm() {
           id="description"
           name="description"
           required
+          defaultValue={product?.description}
         />
       </div>
 
@@ -91,6 +118,7 @@ export function CreateProductForm() {
           id="imageUrl"
           name="imageUrl"
           required
+          defaultValue={product?.imageUrl}
           type="url"
         />
       </div>
@@ -108,6 +136,7 @@ export function CreateProductForm() {
             id="category"
             name="category"
             required
+            defaultValue={product?.category}
             type="text"
           />
         </div>
@@ -121,6 +150,7 @@ export function CreateProductForm() {
             id="price"
             name="price"
             required
+            defaultValue={product?.price}
             step="0.01"
             type="number"
           />
@@ -135,6 +165,7 @@ export function CreateProductForm() {
             id="stock"
             name="stock"
             required
+            defaultValue={product?.stock}
             step="1"
             type="number"
           />
@@ -147,7 +178,7 @@ export function CreateProductForm() {
       >
         <input
           className="h-4 w-4"
-          defaultChecked
+          defaultChecked={product?.active ?? true}
           id="active"
           name="active"
           type="checkbox"
@@ -161,7 +192,7 @@ export function CreateProductForm() {
           disabled={state === "submitting"}
           type="submit"
         >
-          {state === "submitting" ? "Creating product..." : "Create Product"}
+          {state === "submitting" ? submittingLabel : submitLabel}
         </button>
         {message ? (
           <p
