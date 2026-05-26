@@ -276,6 +276,14 @@ export async function readActiveProductsFromDatabase(
   });
 }
 
+export async function getAllProductsForAdmin(): Promise<StoredProduct[]> {
+  return client.db.product.findMany({
+    orderBy: {
+      id: "asc",
+    },
+  });
+}
+
 export async function readActiveProductByIdFromDatabase(
   id: number,
 ): Promise<StoredProduct | null> {

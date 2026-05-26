@@ -89,6 +89,10 @@ export function LeftMenu({ showAdminLink = false }: LeftMenuProps) {
           href: "/admin",
           label: "Admin Dashboard",
         },
+        {
+          href: "/admin/products",
+          label: "Product Management",
+        },
         ...accountLinks,
       ]
     : accountLinks;
