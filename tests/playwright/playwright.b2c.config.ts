@@ -12,6 +12,7 @@ export default defineConfig({
     "**/purchases-screen.spec.ts",
     "**/admin-access-screen.spec.ts",
     "**/admin-products-screen.spec.ts",
+    "**/admin-product-create-screen.spec.ts",
   ],
   fullyParallel: false,
   forbidOnly: !!process.env.CI,

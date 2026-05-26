@@ -24,6 +24,16 @@ export type ProductFilters = {
   category?: string;
 };
 
+export type AdminProductInput = {
+  active: boolean;
+  category: string;
+  description: string;
+  imageUrl: string;
+  name: string;
+  price: number;
+  stock: number;
+};
+
 type CartWithItems = Prisma.CartGetPayload<{
   include: {
     items: {
@@ -280,6 +290,22 @@ export async function getAllProductsForAdmin(): Promise<StoredProduct[]> {
   return client.db.product.findMany({
     orderBy: {
       id: "asc",
+    },
+  });
+}
+
+export async function createProductForAdmin(
+  input: AdminProductInput,
+): Promise<StoredProduct> {
+  return client.db.product.create({
+    data: {
+      active: input.active,
+      category: input.category,
+      description: input.description,
+      imageUrl: input.imageUrl,
+      name: input.name,
+      price: input.price,
+      stock: input.stock,
     },
   });
 }
