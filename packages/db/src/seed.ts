@@ -1,6 +1,14 @@
 import { client } from "./client.js";
 import { posts, products } from "./data.js";
+import { hashPassword } from "./password.js";
 import { resetPosts } from "./store.js";
+
+const adminUser = {
+  email: "admin@thomasstore.com",
+  name: "Thomas Store Admin",
+  password: "admin123",
+  role: "ADMIN",
+};
 
 export async function seed() {
   resetPosts();
@@ -57,4 +65,13 @@ export async function seedProducts() {
       data: product,
     });
   }
+
+  await client.db.user.create({
+    data: {
+      email: adminUser.email,
+      name: adminUser.name,
+      passwordHash: await hashPassword(adminUser.password),
+      role: adminUser.role,
+    },
+  });
 }

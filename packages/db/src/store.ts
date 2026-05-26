@@ -306,7 +306,10 @@ export async function readActiveProductCategoriesFromDatabase(): Promise<
   return categories.map((product) => product.category);
 }
 
-function emptyCartSummary(sessionId: string | null, userId: number | null = null): CartSummary {
+function emptyCartSummary(
+  sessionId: string | null,
+  userId: number | null = null,
+): CartSummary {
   return {
     itemCount: 0,
     items: [],
@@ -387,6 +390,7 @@ export async function createCustomerUser(input: {
       email: input.email,
       name: input.name,
       passwordHash: input.passwordHash,
+      role: "CUSTOMER",
     },
   });
 
@@ -747,7 +751,9 @@ export async function clearUserCart(userId: number): Promise<CartSummary> {
   return getCartByUserId(userId);
 }
 
-export async function checkoutUserCart(userId: number): Promise<PurchaseSummary> {
+export async function checkoutUserCart(
+  userId: number,
+): Promise<PurchaseSummary> {
   return client.db.$transaction(async (tx) => {
     const user = await tx.user.findUnique({
       where: {
@@ -756,7 +762,10 @@ export async function checkoutUserCart(userId: number): Promise<PurchaseSummary>
     });
 
     if (!user) {
-      throw new CheckoutError("USER_NOT_FOUND", "Customer account was not found.");
+      throw new CheckoutError(
+        "USER_NOT_FOUND",
+        "Customer account was not found.",
+      );
     }
 
     const cart = await tx.cart.findUnique({

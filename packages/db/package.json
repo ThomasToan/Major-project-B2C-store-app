@@ -29,6 +29,10 @@
       "types": "./src/seed.ts",
       "default": "./dist/seed.js"
     },
+    "./password": {
+      "types": "./src/password.ts",
+      "default": "./dist/password.js"
+    },
     "./store": {
       "types": "./src/store.ts",
       "default": "./dist/store.js"
