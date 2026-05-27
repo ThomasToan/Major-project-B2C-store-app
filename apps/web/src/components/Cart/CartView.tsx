@@ -1,7 +1,7 @@
 "use client";
 
 import type { CartSummary } from "@repo/db/store";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 const currencyFormatter = new Intl.NumberFormat("en-AU", {
@@ -28,14 +28,35 @@ async function fetchCart() {
 export function CartView() {
   const [cart, setCart] = useState<CartSummary | "unauthorized" | undefined>();
   const [error, setError] = useState(false);
+  const latestRequestId = useRef(0);
+
+  function nextRequestId() {
+    latestRequestId.current += 1;
+    return latestRequestId.current;
+  }
+
+  function isLatestRequest(requestId: number) {
+    return requestId === latestRequestId.current;
+  }
 
   useEffect(() => {
+    const requestId = nextRequestId();
+
     void fetchCart()
-      .then(setCart)
-      .catch(() => setError(true));
+      .then((nextCart) => {
+        if (isLatestRequest(requestId)) {
+          setCart(nextCart);
+        }
+      })
+      .catch(() => {
+        if (isLatestRequest(requestId)) {
+          setError(true);
+        }
+      });
   }, []);
 
   async function updateQuantity(productId: number, quantity: number) {
+    const requestId = nextRequestId();
     const response = await fetch("/api/cart/items", {
       body: JSON.stringify({ productId, quantity }),
       headers: {
@@ -44,12 +65,13 @@ export function CartView() {
       method: "PATCH",
     });
 
-    if (response.ok) {
+    if (response.ok && isLatestRequest(requestId)) {
       setCart((await response.json()) as CartSummary);
     }
   }
 
   async function removeItem(productId: number) {
+    const requestId = nextRequestId();
     const response = await fetch("/api/cart/items", {
       body: JSON.stringify({ productId }),
       headers: {
@@ -58,7 +80,7 @@ export function CartView() {
       method: "DELETE",
     });
 
-    if (response.ok) {
+    if (response.ok && isLatestRequest(requestId)) {
       setCart((await response.json()) as CartSummary);
     }
   }

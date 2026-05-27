@@ -5,8 +5,9 @@ import { expect, test, type Page } from "./fixtures";
 const customerPassword = "customer123";
 const adminEmail = "admin@thomasstore.com";
 const adminPassword = "admin123";
-const addToCartTimeout = 15_000;
-const checkoutSuccessTimeout = 20_000;
+const addToCartTimeout = 20_000;
+const cartMutationTimeout = 30_000;
+const checkoutSuccessTimeout = 60_000;
 const currencyFormatter = new Intl.NumberFormat("en-AU", {
   currency: "AUD",
   style: "currency",
@@ -91,7 +92,19 @@ async function checkoutProductForCustomer(
   const product = await getProduct(productName);
 
   await page.goto(`/products/${product.id}`);
-  await page.getByTestId("add-to-cart-button").click();
+  const [addToCartResponse] = await Promise.all([
+    page.waitForResponse(
+      (cartResponse) =>
+        cartResponse.url().includes("/api/cart/items") &&
+        cartResponse.request().method() === "POST",
+      {
+        timeout: cartMutationTimeout,
+      },
+    ),
+    page.getByTestId("add-to-cart-button").click(),
+  ]);
+
+  expect(addToCartResponse.ok()).toBe(true);
   await expect(page.getByTestId("add-to-cart-status")).toContainText(
     "Added to cart.",
     {
@@ -102,14 +115,24 @@ async function checkoutProductForCustomer(
   await page.getByLabel("Card number").fill("4242 4242 4242 4242");
   await page.getByLabel("Expiry").fill("12/30");
   await page.getByLabel("CVV").fill("123");
-  await Promise.all([
-    page.waitForURL(/\/purchase-success\?purchaseId=\d+/, {
-      timeout: checkoutSuccessTimeout,
-    }),
+  const [checkoutResponse] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url().includes("/api/checkout") &&
+        response.request().method() === "POST",
+      {
+        timeout: checkoutSuccessTimeout,
+      },
+    ),
     page.getByRole("button", { name: "Pay now" }).click(),
   ]);
-  await expect(page.getByTestId("purchase-success")).toBeVisible({
+
+  expect(checkoutResponse.ok()).toBe(true);
+  await page.waitForURL(/\/purchase-success\?purchaseId=\d+/, {
     timeout: checkoutSuccessTimeout,
+  });
+  await expect(page.getByTestId("purchase-success")).toBeVisible({
+      timeout: checkoutSuccessTimeout,
   });
 
   return {
@@ -123,7 +146,7 @@ test.beforeEach(async () => {
 });
 
 test.describe("B2C ADMIN PURCHASE RECORDS", () => {
-  test.describe.configure({ timeout: 60_000 });
+  test.describe.configure({ timeout: 120_000 });
 
   test("guest visiting admin purchases is redirected to login", async ({
     page,

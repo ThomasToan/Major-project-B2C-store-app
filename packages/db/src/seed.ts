@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { client } from "./client.js";
 import { products } from "./data.js";
 import { hashPassword } from "./password.js";
@@ -10,7 +11,7 @@ const adminUser = {
 };
 
 export async function seed() {
-  await seedProducts();
+  await withSeedRetry(seedProducts);
 }
 
 export async function seedProducts() {
@@ -36,4 +37,47 @@ export async function seedProducts() {
       role: adminUser.role,
     },
   });
+}
+
+function isRetryableSeedError(error: unknown) {
+  if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    ["P1001", "P1002", "P1017"].includes(error.code)
+  ) {
+    return true;
+  }
+
+  if (error instanceof Prisma.PrismaClientInitializationError) {
+    return true;
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+
+  return (
+    message.includes("Can't reach database server") ||
+    message.includes("Connection terminated") ||
+    message.includes("ECONNRESET") ||
+    message.includes("ETIMEDOUT")
+  );
+}
+
+async function withSeedRetry<T>(operation: () => Promise<T>): Promise<T> {
+  const maxAttempts = 6;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      if (attempt === maxAttempts || !isRetryableSeedError(error)) {
+        throw error;
+      }
+
+      await client.db.$disconnect().catch(() => undefined);
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.min(1000 * 2 ** (attempt - 1), 10_000)),
+      );
+    }
+  }
+
+  return operation();
 }

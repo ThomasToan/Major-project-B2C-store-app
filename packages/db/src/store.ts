@@ -1,5 +1,5 @@
+import { Prisma } from "@prisma/client";
 import type {
-  Prisma,
   Product as DatabaseProduct,
   User as DatabaseUser,
 } from "@prisma/client";
@@ -435,11 +435,26 @@ export async function getOrCreateCartByUserId(userId: number) {
     return existingCart;
   }
 
-  return client.db.cart.create({
-    data: {
-      userId,
-    },
-  });
+  try {
+    return await client.db.cart.create({
+      data: {
+        userId,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return client.db.cart.findUniqueOrThrow({
+        where: {
+          userId,
+        },
+      });
+    }
+
+    throw error;
+  }
 }
 
 export async function getCartBySessionId(
@@ -508,24 +523,7 @@ async function addProductToCartRecord(
     return undefined;
   }
 
-  await client.db.cartItem.upsert({
-    create: {
-      cartId,
-      productId,
-      quantity: 1,
-    },
-    update: {
-      quantity: {
-        increment: 1,
-      },
-    },
-    where: {
-      cartId_productId: {
-        cartId,
-        productId,
-      },
-    },
-  });
+  await incrementCartItemQuantity(cartId, productId);
 
   const cart = await client.db.cart.findUniqueOrThrow({
     where: {
@@ -536,6 +534,66 @@ async function addProductToCartRecord(
   return cart.userId
     ? getCartByUserId(cart.userId)
     : getCartBySessionId(cart.sessionId || "");
+}
+
+async function incrementCartItemQuantity(
+  cartId: number,
+  productId: number,
+): Promise<void> {
+  const where = {
+    cartId_productId: {
+      cartId,
+      productId,
+    },
+  };
+
+  try {
+    await client.db.cartItem.update({
+      data: {
+        quantity: {
+          increment: 1,
+        },
+      },
+      where,
+    });
+    return;
+  } catch (error) {
+    if (
+      !(
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      )
+    ) {
+      throw error;
+    }
+  }
+
+  try {
+    await client.db.cartItem.create({
+      data: {
+        cartId,
+        productId,
+        quantity: 1,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      await client.db.cartItem.update({
+        data: {
+          quantity: {
+            increment: 1,
+          },
+        },
+        where,
+      });
+      return;
+    }
+
+    throw error;
+  }
 }
 
 export async function addProductToCart(

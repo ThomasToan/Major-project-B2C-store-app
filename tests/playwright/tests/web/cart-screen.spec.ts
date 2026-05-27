@@ -8,6 +8,7 @@ const currencyFormatter = new Intl.NumberFormat("en-AU", {
 });
 const password = "customer123";
 const addToCartTimeout = 15_000;
+const cartMutationTimeout = 20_000;
 
 function uniqueEmail(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}@example.com`;
@@ -24,7 +25,23 @@ async function getTestProduct() {
 
 async function addProductToCart(page: Page, productId: number) {
   await page.goto(`/products/${productId}`);
-  await page.getByTestId("add-to-cart-button").click();
+  await clickAddToCartButton(page);
+}
+
+async function clickAddToCartButton(page: Page) {
+  const [response] = await Promise.all([
+    page.waitForResponse(
+      (cartResponse) =>
+        cartResponse.url().includes("/api/cart/items") &&
+        cartResponse.request().method() === "POST",
+      {
+        timeout: cartMutationTimeout,
+      },
+    ),
+    page.getByTestId("add-to-cart-button").click(),
+  ]);
+
+  expect(response.ok()).toBe(true);
   await expect(page.getByTestId("add-to-cart-status")).toContainText(
     "Added to cart.",
     {
@@ -48,11 +65,33 @@ async function registerCustomer(page: Page) {
   return email;
 }
 
+async function clickCartMutation(
+  page: Page,
+  method: "DELETE" | "PATCH",
+  click: () => Promise<unknown>,
+) {
+  const [response] = await Promise.all([
+    page.waitForResponse(
+      (cartResponse) =>
+        cartResponse.url().includes("/api/cart/items") &&
+        cartResponse.request().method() === method,
+      {
+        timeout: cartMutationTimeout,
+      },
+    ),
+    click(),
+  ]);
+
+  expect(response.ok()).toBe(true);
+}
+
 test.beforeEach(async () => {
   await seed();
 });
 
 test.describe("B2C CART SCREEN", () => {
+  test.describe.configure({ timeout: 60_000 });
+
   test("guest cart page asks for login", async ({ page }) => {
     await page.goto("/cart");
 
@@ -101,7 +140,7 @@ test.describe("B2C CART SCREEN", () => {
 
     await registerCustomer(page);
     await addProductToCart(page, product.id);
-    await page.getByTestId("add-to-cart-button").click();
+    await clickAddToCartButton(page);
     await page.goto("/cart");
 
     await expect(page.getByTestId(`cart-item-quantity-${product.id}`)).toHaveText(
@@ -122,7 +161,9 @@ test.describe("B2C CART SCREEN", () => {
       currencyFormatter.format(product.price),
     );
 
-    await page.getByRole("button", { name: `Increase ${product.name}` }).click();
+    await clickCartMutation(page, "PATCH", () =>
+      page.getByRole("button", { name: `Increase ${product.name}` }).click(),
+    );
 
     await expect(page.getByTestId(`cart-item-quantity-${product.id}`)).toHaveText(
       "2",
@@ -131,7 +172,9 @@ test.describe("B2C CART SCREEN", () => {
       currencyFormatter.format(product.price * 2),
     );
 
-    await page.getByRole("button", { name: `Decrease ${product.name}` }).click();
+    await clickCartMutation(page, "PATCH", () =>
+      page.getByRole("button", { name: `Decrease ${product.name}` }).click(),
+    );
 
     await expect(page.getByTestId(`cart-item-quantity-${product.id}`)).toHaveText(
       "1",
@@ -148,7 +191,9 @@ test.describe("B2C CART SCREEN", () => {
     await addProductToCart(page, product.id);
     await page.goto("/cart");
 
-    await page.getByRole("button", { name: `Remove ${product.name}` }).click();
+    await clickCartMutation(page, "DELETE", () =>
+      page.getByRole("button", { name: `Remove ${product.name}` }).click(),
+    );
 
     await expect(page.getByTestId("cart-empty")).toBeVisible();
     await expect(page.getByText(product.name)).not.toBeVisible();

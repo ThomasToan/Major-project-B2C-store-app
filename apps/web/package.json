@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 3001",
+    "dev": "next dev --turbo -p 3001",
     "build": "next build",
     "start": "next start",
     "start:e2e": "cross-env E2E=yes next start -p 3001",
@@ -13,13 +13,13 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
-    "@repo/ui": "workspace:*",
     "@repo/db": "workspace:*",
+    "@repo/ui": "workspace:*",
     "@tailwindcss/postcss": "^4.0.0",
-    "next": "^15.1.6",
+    "next": "^14.2.35",
     "postcss": "^8.5.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "tailwindcss": "^4.0.0"
   },
   "devDependencies": {
@@ -27,8 +27,8 @@
     "@repo/tailwind-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "^22",
-    "@types/react": "19.0.8",
-    "@types/react-dom": "19.0.3",
+    "@types/react": "18.2.66",
+    "@types/react-dom": "18.2.22",
     "cross-env": "^7.0.3",
     "typescript": "5.7.3"
   }
