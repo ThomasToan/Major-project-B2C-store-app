@@ -7,12 +7,17 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:push": "prisma db push",
-    "seed": "pnpm build && node -e \"require('./dist/seed.js').seed().then(() => process.exit(0)).catch((error) => { console.error(error); process.exit(1); })\"",
+    "with:test-db": "node ./scripts/with-test-database-env.mjs",
+    "db:push:test": "pnpm run with:test-db -- prisma db push",
+    "seed:run": "node -e \"require('./dist/seed.js').seed().then(() => process.exit(0)).catch((error) => { console.error(error); process.exit(1); })\"",
+    "seed": "pnpm build && pnpm seed:run",
+    "seed:test": "pnpm run with:test-db -- pnpm build && pnpm run with:test-db -- pnpm seed:run",
     "lint": "eslint . --max-warnings 0",
     "prebuild": "pnpm db:generate",
     "predev": "pnpm db:generate",
     "postinstall": "pnpm db:generate",
     "studio": "prisma studio",
+    "studio:test": "pnpm run with:test-db -- prisma studio",
     "dev": "tsc --watch",
     "build": "tsc"
   },
@@ -29,6 +34,10 @@
       "types": "./src/seed.ts",
       "default": "./dist/seed.js"
     },
+    "./password": {
+      "types": "./src/password.ts",
+      "default": "./dist/password.js"
+    },
     "./store": {
       "types": "./src/store.ts",
       "default": "./dist/store.js"
@@ -41,6 +50,7 @@
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@repo/ui": "workspace:*",
+    "cross-env": "^7.0.3",
     "@types/node": "^22.13.1",
     "vitest": "^3.0.4"
   }

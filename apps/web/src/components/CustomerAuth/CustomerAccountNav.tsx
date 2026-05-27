@@ -8,6 +8,7 @@ type Customer = {
   email: string;
   id: number;
   name: string;
+  role: string;
 };
 
 function getAuthHref(path: string, target: "login" | "register") {
@@ -88,26 +89,37 @@ export function CustomerAccountNav({ className = "" }: { className?: string }) {
             <p className="text-primary mt-1 font-semibold">{customer.name}</p>
             <p className="text-secondary mt-1 text-xs">{customer.email}</p>
           </div>
-          <button
-            className="rounded-md border border-[color:var(--border-color)] px-4 py-2 text-sm font-semibold text-primary disabled:cursor-wait disabled:opacity-70"
-            data-test-id="logout-button"
-            disabled={isLoggingOut}
-            onClick={handleLogout}
-            type="button"
-          >
-            {isLoggingOut ? "Logging out..." : "Logout"}
-          </button>
+          <div className="grid gap-2 sm:flex sm:items-center">
+            {customer.role === "ADMIN" ? (
+              <Link
+                className="bg-wsu hover:bg-wsu-light rounded-md px-4 py-2 text-center text-sm font-semibold text-white"
+                data-test-id="admin-dashboard-link"
+                href="/admin"
+              >
+                Admin Dashboard
+              </Link>
+            ) : null}
+            <button
+              className="text-primary rounded-md border border-[color:var(--border-color)] px-4 py-2 text-sm font-semibold disabled:cursor-wait disabled:opacity-70"
+              data-test-id="logout-button"
+              disabled={isLoggingOut}
+              onClick={handleLogout}
+              type="button"
+            >
+              {isLoggingOut ? "Logging out..." : "Logout"}
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
           <Link
-            className="rounded-md border border-[color:var(--border-color)] px-4 py-2 text-center text-sm font-semibold text-primary"
+            className="text-primary rounded-md border border-[color:var(--border-color)] px-4 py-2 text-center text-sm font-semibold"
             href={getAuthHref(currentPath, "login")}
           >
             Login
           </Link>
           <Link
-            className="rounded-md border border-[color:var(--border-color)] px-4 py-2 text-center text-sm font-semibold text-primary"
+            className="text-primary rounded-md border border-[color:var(--border-color)] px-4 py-2 text-center text-sm font-semibold"
             href={getAuthHref(currentPath, "register")}
           >
             Register

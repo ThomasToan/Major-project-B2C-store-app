@@ -46,7 +46,7 @@ function SidebarSection({
 }) {
   return (
     <section>
-      <h2 className="text-xs font-semibold uppercase text-secondary">
+      <h2 className="text-secondary text-xs font-semibold uppercase">
         {title}
       </h2>
       <div className="mt-3 grid gap-1">{children}</div>
@@ -65,7 +65,7 @@ function SidebarLink({
 }) {
   return (
     <Link
-      className="rounded-md px-3 py-2 text-sm font-semibold text-primary transition hover:bg-[color:var(--surface-raised)]"
+      className="text-primary rounded-md px-3 py-2 text-sm font-semibold transition hover:bg-[color:var(--surface-raised)]"
       data-test-id={testId}
       href={href}
     >
@@ -79,9 +79,28 @@ type LeftMenuProps = {
   selectedTag?: string;
   selectedYear?: string;
   selectedMonth?: string;
+  showAdminLink?: boolean;
 };
 
-export function LeftMenu(_props: LeftMenuProps) {
+export function LeftMenu({ showAdminLink = false }: LeftMenuProps) {
+  const visibleAccountLinks = showAdminLink
+    ? [
+        {
+          href: "/admin",
+          label: "Admin Dashboard",
+        },
+        {
+          href: "/admin/products",
+          label: "Product Management",
+        },
+        {
+          href: "/admin/purchases",
+          label: "Purchase Records",
+        },
+        ...accountLinks,
+      ]
+    : accountLinks;
+
   return (
     <aside className="w-full border-b border-[color:var(--border-color)] bg-[color:var(--surface-muted)] md:sticky md:top-0 md:h-screen md:border-b-0 md:border-r">
       <div className="flex h-full flex-col px-7 py-5 md:overflow-y-auto">
@@ -92,10 +111,8 @@ export function LeftMenu(_props: LeftMenuProps) {
             src="/wsulogo.png"
           />
           <div>
-            <p className="text-xl font-bold text-primary">Thomas Store</p>
-            <p className="text-secondary text-xs font-medium">
-              B2C storefront
-            </p>
+            <p className="text-primary text-xl font-bold">Thomas Store</p>
+            <p className="text-secondary text-xs font-medium">B2C storefront</p>
           </div>
         </Link>
         <nav className="mt-12 flex flex-1 flex-col gap-8">
@@ -122,12 +139,12 @@ export function LeftMenu(_props: LeftMenuProps) {
           </SidebarSection>
 
           <SidebarSection title="Account">
-            {accountLinks.map((item) => (
+            {visibleAccountLinks.map((item) => (
               <SidebarLink
                 href={item.href}
                 key={item.href}
                 label={item.label}
-                testId={`store-account-${item.label.toLowerCase()}`}
+                testId={`store-account-${toTestId(item.label)}`}
               />
             ))}
           </SidebarSection>

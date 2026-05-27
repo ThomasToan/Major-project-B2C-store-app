@@ -34,6 +34,24 @@ export async function getCurrentCustomer() {
   return getCustomerBySessionId(sessionId);
 }
 
+export async function getCurrentUser() {
+  return getCurrentCustomer();
+}
+
+export async function requireCustomer() {
+  return getCurrentCustomer();
+}
+
+export async function requireAdmin() {
+  const user = await getCurrentUser();
+
+  if (user?.role !== "ADMIN") {
+    return undefined;
+  }
+
+  return user;
+}
+
 export function setCustomerSessionCookie(
   response: NextResponse,
   sessionId: string,

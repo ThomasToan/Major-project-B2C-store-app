@@ -5,7 +5,7 @@ node_modules
 .pnp
 .pnp.js
 .auth
-dev.db
+*.db
 
 # Local env files
 .env

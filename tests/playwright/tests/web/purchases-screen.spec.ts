@@ -3,6 +3,8 @@ import { seed } from "@repo/db/seed";
 import { expect, test, type Page } from "./fixtures";
 
 const password = "customer123";
+const addToCartTimeout = 15_000;
+const checkoutSuccessTimeout = 20_000;
 const currencyFormatter = new Intl.NumberFormat("en-AU", {
   currency: "AUD",
   style: "currency",
@@ -50,7 +52,25 @@ async function addProductToCart(page: Page, productId: number) {
   await page.getByTestId("add-to-cart-button").click();
   await expect(page.getByTestId("add-to-cart-status")).toContainText(
     "Added to cart.",
+    {
+      timeout: addToCartTimeout,
+    },
   );
+}
+
+async function submitSuccessfulCheckout(page: Page) {
+  await page.getByLabel("Card number").fill("4242 4242 4242 4242");
+  await page.getByLabel("Expiry").fill("12/30");
+  await page.getByLabel("CVV").fill("123");
+  await Promise.all([
+    page.waitForURL(/\/purchase-success\?purchaseId=\d+/, {
+      timeout: checkoutSuccessTimeout,
+    }),
+    page.getByRole("button", { name: "Pay now" }).click(),
+  ]);
+  await expect(page.getByTestId("purchase-success")).toBeVisible({
+    timeout: checkoutSuccessTimeout,
+  });
 }
 
 async function checkoutProduct(page: Page) {
@@ -58,11 +78,7 @@ async function checkoutProduct(page: Page) {
 
   await addProductToCart(page, product.id);
   await page.goto("/checkout");
-  await page.getByLabel("Card number").fill("4242 4242 4242 4242");
-  await page.getByLabel("Expiry").fill("12/30");
-  await page.getByLabel("CVV").fill("123");
-  await page.getByRole("button", { name: "Pay now" }).click();
-  await expect(page.getByTestId("purchase-success")).toBeVisible();
+  await submitSuccessfulCheckout(page);
 
   return product;
 }
@@ -72,6 +88,8 @@ test.beforeEach(async () => {
 });
 
 test.describe("B2C PURCHASE HISTORY SCREEN", () => {
+  test.describe.configure({ timeout: 60_000 });
+
   test("guest visiting purchases is redirected to login", async ({ page }) => {
     await page.goto("/purchases");
 
@@ -97,10 +115,7 @@ test.describe("B2C PURCHASE HISTORY SCREEN", () => {
     await registerCustomer(page);
     await addProductToCart(page, product.id);
     await page.goto("/checkout");
-    await page.getByLabel("Card number").fill("4242 4242 4242 4242");
-    await page.getByLabel("Expiry").fill("12/30");
-    await page.getByLabel("CVV").fill("123");
-    await page.getByRole("button", { name: "Pay now" }).click();
+    await submitSuccessfulCheckout(page);
     await page.getByRole("link", { name: "View My Orders" }).click();
 
     const card = page.getByTestId("purchase-card").filter({

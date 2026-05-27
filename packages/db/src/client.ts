@@ -9,14 +9,17 @@ export const createClient = () => {
     return global.prisma;
   }
 
-  const URL = process.env.DATABASE_URL || "file:./dev.db";
+  const url = process.env.DATABASE_URL;
+
+  if (!url) {
+    throw new Error("DATABASE_URL is required.");
+  }
 
   const prisma = new PrismaClient({
-    datasourceUrl: URL,
+    datasourceUrl: url,
   });
 
   console.log("Connected to database");
-  console.log(URL);
 
   global.prisma = prisma;
   return prisma;

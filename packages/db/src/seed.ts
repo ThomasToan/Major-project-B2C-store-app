@@ -1,52 +1,22 @@
 import { client } from "./client.js";
-import { posts, products } from "./data.js";
-import { resetPosts } from "./store.js";
+import { products } from "./data.js";
+import { hashPassword } from "./password.js";
+
+const adminUser = {
+  email: "admin@thomasstore.com",
+  name: "Thomas Store Admin",
+  password: "admin123",
+  role: "ADMIN",
+};
 
 export async function seed() {
-  resetPosts();
-  // This clears old test data
-  await client.db.like.deleteMany();
-  await client.db.post.deleteMany();
-
-  for (const post of posts) {
-    await client.db.post.create({
-      // This inserts each seeded post into the databse and keeps its original active value
-      data: {
-        id: post.id,
-        urlId: post.urlId,
-        title: post.title,
-        content: post.content,
-        description: post.description,
-        imageUrl: post.imageUrl,
-        date: post.date,
-        category: post.category,
-        views: post.views,
-        likes: post.likes,
-        tags: post.tags
-          .split(",")
-          .map((tag) => tag.trim())
-          .join(","),
-        active: post.active, // seeded posts with know active values/
-      },
-    });
-
-    for (let i = 0; i < post.likes; i++) {
-      await client.db.like.create({
-        data: {
-          postId: post.id,
-          userIP: `192.168.100.${i}`,
-        },
-      });
-    }
-  }
-
   await seedProducts();
 }
 
 export async function seedProducts() {
   await client.db.cartItem.deleteMany();
-  await client.db.cart.deleteMany();
   await client.db.customerSession.deleteMany();
+  await client.db.cart.deleteMany();
   await client.db.purchaseItem.deleteMany();
   await client.db.purchase.deleteMany();
   await client.db.user.deleteMany();
@@ -57,4 +27,13 @@ export async function seedProducts() {
       data: product,
     });
   }
+
+  await client.db.user.create({
+    data: {
+      email: adminUser.email,
+      name: adminUser.name,
+      passwordHash: await hashPassword(adminUser.password),
+      role: adminUser.role,
+    },
+  });
 }

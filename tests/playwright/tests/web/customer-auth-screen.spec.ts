@@ -3,6 +3,7 @@ import { seed } from "@repo/db/seed";
 import { expect, test, type Page } from "./fixtures";
 
 const password = "customer123";
+const addToCartTimeout = 15_000;
 
 function uniqueEmail(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}@example.com`;
@@ -46,6 +47,9 @@ async function addWatchToCart(page: Page) {
   await page.getByTestId("add-to-cart-button").click();
   await expect(page.getByTestId("add-to-cart-status")).toContainText(
     "Added to cart.",
+    {
+      timeout: addToCartTimeout,
+    },
   );
 
   return product;

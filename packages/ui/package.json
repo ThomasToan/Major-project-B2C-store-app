@@ -21,7 +21,6 @@
     "@repo/eslint-config": "workspace:*",
     "@repo/tailwind-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@repo/utils": "workspace:*",
     "@tailwindcss/cli": "^4.0.0",
     "@turbo/gen": "^2.3.4",
     "@types/node": "^22.10.10",

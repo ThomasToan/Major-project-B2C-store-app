@@ -2,8 +2,7 @@
   "name": "@repo/env",
   "version": "1.0.0",
   "exports": {
-    "./web": "./web.ts",
-    "./admin": "./admin.ts"
+    "./web": "./web.ts"
   },
   "module": "./index.ts",
   "type": "module",
