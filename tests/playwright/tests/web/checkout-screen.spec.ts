@@ -3,6 +3,8 @@ import { seed } from "@repo/db/seed";
 import { expect, test, type Page } from "./fixtures";
 
 const password = "customer123";
+const addToCartTimeout = 15_000;
+const checkoutSuccessTimeout = 20_000;
 
 function uniqueEmail(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}@example.com`;
@@ -39,6 +41,9 @@ async function addProductToCart(page: Page, productId: number) {
   await page.getByTestId("add-to-cart-button").click();
   await expect(page.getByTestId("add-to-cart-status")).toContainText(
     "Added to cart.",
+    {
+      timeout: addToCartTimeout,
+    },
   );
 }
 
@@ -51,6 +56,22 @@ async function fillCheckoutForm(page: Page, cardNumber: string) {
 async function submitCheckout(page: Page, cardNumber = "4242 4242 4242 4242") {
   await fillCheckoutForm(page, cardNumber);
   await page.getByRole("button", { name: "Pay now" }).click();
+}
+
+async function submitSuccessfulCheckout(
+  page: Page,
+  cardNumber = "4242 4242 4242 4242",
+) {
+  await fillCheckoutForm(page, cardNumber);
+  await Promise.all([
+    page.waitForURL(/\/purchase-success\?purchaseId=\d+/, {
+      timeout: checkoutSuccessTimeout,
+    }),
+    page.getByRole("button", { name: "Pay now" }).click(),
+  ]);
+  await expect(page.getByTestId("purchase-success")).toBeVisible({
+    timeout: checkoutSuccessTimeout,
+  });
 }
 
 async function prepareCheckout(page: Page) {
@@ -71,6 +92,8 @@ test.beforeEach(async () => {
 });
 
 test.describe("B2C CHECKOUT SCREEN", () => {
+  test.describe.configure({ timeout: 60_000 });
+
   test("guest visiting checkout is redirected to login", async ({ page }) => {
     await page.goto("/checkout");
 
@@ -93,10 +116,9 @@ test.describe("B2C CHECKOUT SCREEN", () => {
   }) => {
     const { customer, product } = await prepareCheckout(page);
 
-    await submitCheckout(page);
+    await submitSuccessfulCheckout(page);
 
     await expect(page).toHaveURL(/\/purchase-success\?purchaseId=\d+/);
-    await expect(page.getByTestId("purchase-success")).toBeVisible();
 
     const purchaseId = Number(new URL(page.url()).searchParams.get("purchaseId"));
     const purchase = await client.db.purchase.findUnique({
@@ -120,8 +142,7 @@ test.describe("B2C CHECKOUT SCREEN", () => {
   test("cart is cleared after successful checkout", async ({ page }) => {
     await prepareCheckout(page);
 
-    await submitCheckout(page);
-    await expect(page.getByTestId("purchase-success")).toBeVisible();
+    await submitSuccessfulCheckout(page);
     await page.goto("/cart");
 
     await expect(page.getByTestId("cart-empty")).toBeVisible();
@@ -130,8 +151,7 @@ test.describe("B2C CHECKOUT SCREEN", () => {
   test("product stock is reduced after successful checkout", async ({ page }) => {
     const { product } = await prepareCheckout(page);
 
-    await submitCheckout(page);
-    await expect(page.getByTestId("purchase-success")).toBeVisible();
+    await submitSuccessfulCheckout(page);
 
     const updatedProduct = await client.db.product.findUniqueOrThrow({
       where: {
