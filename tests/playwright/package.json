@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start:web": "cross-env DATABASE_URL=file:./test.db TEST_DATABASE_URL=file:./test.db E2E=yes pnpm --filter @repo/web start:e2e",
-    "test:b2c": "pnpm --filter @repo/db db:push:test && cross-env DATABASE_URL=file:./test.db TEST_DATABASE_URL=file:./test.db pnpm playwright test --config=playwright.b2c.config.ts",
-    "ui": "pnpm --filter @repo/db db:push:test && cross-env DATABASE_URL=file:./test.db TEST_DATABASE_URL=file:./test.db pnpm playwright test --config=playwright.b2c.config.ts --ui"
+    "with:test-db": "node ../../packages/db/scripts/with-test-database-env.mjs",
+    "start:web": "pnpm run with:test-db -- pnpm --filter @repo/web start:e2e",
+    "test:b2c": "pnpm --filter @repo/db db:push:test && pnpm run with:test-db -- pnpm playwright test --config=playwright.b2c.config.ts",
+    "ui": "pnpm --filter @repo/db db:push:test && pnpm run with:test-db -- pnpm playwright test --config=playwright.b2c.config.ts --ui"
   },
   "keywords": [],
   "author": "",

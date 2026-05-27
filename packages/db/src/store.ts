@@ -124,6 +124,7 @@ function buildProductWhere(filters: ProductFilters = {}) {
   if (search) {
     where.name = {
       contains: search,
+      mode: "insensitive",
     };
   }
 
