@@ -1,6 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 import "dotenv/config";
 
+const testDatabaseUrl = process.env.TEST_DATABASE_URL || "file:./test.db";
+
+process.env.DATABASE_URL = testDatabaseUrl;
+process.env.TEST_DATABASE_URL = testDatabaseUrl;
+process.env.E2E = "yes";
+
 export default defineConfig({
   testDir: "./tests/web",
   testMatch: [
@@ -35,11 +41,16 @@ export default defineConfig({
       },
     },
   ],
-  webServer: process.env.CI
-    ? {
-        command: "pnpm --filter @repo/web start:e2e",
-        reuseExistingServer: true,
-        url: "http://localhost:3001",
-      }
-    : undefined,
+  webServer: {
+    command: "pnpm --filter @repo/web dev",
+    env: {
+      ...process.env,
+      DATABASE_URL: testDatabaseUrl,
+      E2E: "yes",
+      TEST_DATABASE_URL: testDatabaseUrl,
+    },
+    reuseExistingServer: false,
+    timeout: 120_000,
+    url: "http://localhost:3001",
+  },
 });

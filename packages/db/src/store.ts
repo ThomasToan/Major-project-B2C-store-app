@@ -353,28 +353,47 @@ export async function createCustomerSession(input: {
 }
 
 export async function getCustomerBySessionId(sessionId: string) {
+  const normalizedSessionId = normalizeSessionId(sessionId);
+
+  if (!normalizedSessionId) {
+    return null;
+  }
+
   const session = await client.db.customerSession.findUnique({
-    include: {
-      user: true,
-    },
     where: {
-      sessionId,
+      sessionId: normalizedSessionId,
     },
   });
 
   if (!session || session.expiresAt <= new Date()) {
     if (session) {
-      await client.db.customerSession.delete({
+      await client.db.customerSession.deleteMany({
         where: {
-          sessionId,
+          sessionId: normalizedSessionId,
         },
       });
     }
 
-    return undefined;
+    return null;
   }
 
-  return toSafeCustomer(session.user);
+  const user = await client.db.user.findUnique({
+    where: {
+      id: session.userId,
+    },
+  });
+
+  if (!user) {
+    await client.db.customerSession.deleteMany({
+      where: {
+        sessionId: normalizedSessionId,
+      },
+    });
+
+    return null;
+  }
+
+  return toSafeCustomer(user);
 }
 
 export async function deleteCustomerSession(sessionId: string) {

@@ -3,15 +3,16 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start:web": "pnpm --filter web start --port 3001",
-    "test:b2c": "pnpm playwright test --config=playwright.b2c.config.ts",
-    "ui": "pnpm playwright test --config=playwright.b2c.config.ts --ui"
+    "start:web": "cross-env DATABASE_URL=file:./test.db TEST_DATABASE_URL=file:./test.db E2E=yes pnpm --filter @repo/web start:e2e",
+    "test:b2c": "pnpm --filter @repo/db db:push:test && cross-env DATABASE_URL=file:./test.db TEST_DATABASE_URL=file:./test.db pnpm playwright test --config=playwright.b2c.config.ts",
+    "ui": "pnpm --filter @repo/db db:push:test && cross-env DATABASE_URL=file:./test.db TEST_DATABASE_URL=file:./test.db pnpm playwright test --config=playwright.b2c.config.ts --ui"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "@types/node": "^22.7.9"
   },
   "dependencies": {

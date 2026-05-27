@@ -4,6 +4,9 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "db:push:test": "pnpm --filter @repo/db db:push:test",
+    "seed:test": "pnpm --filter @repo/db seed:test",
+    "studio:test": "pnpm --filter @repo/db studio:test",
     "lint": "turbo lint",
     "test:b2c": "turbo test:b2c",
     "format": "prettier --write \"**/*.{ts,tsx,md}\""

@@ -7,12 +7,16 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:push": "prisma db push",
+    "ensure:test-db": "node -e \"const fs = require('node:fs'); fs.mkdirSync('prisma', { recursive: true }); fs.closeSync(fs.openSync('prisma/test.db', 'a'));\"",
+    "db:push:test": "pnpm ensure:test-db && cross-env DATABASE_URL=file:./test.db prisma db push",
     "seed": "pnpm build && node -e \"require('./dist/seed.js').seed().then(() => process.exit(0)).catch((error) => { console.error(error); process.exit(1); })\"",
+    "seed:test": "cross-env DATABASE_URL=file:./test.db pnpm build && cross-env DATABASE_URL=file:./test.db node -e \"require('./dist/seed.js').seed().then(() => process.exit(0)).catch((error) => { console.error(error); process.exit(1); })\"",
     "lint": "eslint . --max-warnings 0",
     "prebuild": "pnpm db:generate",
     "predev": "pnpm db:generate",
     "postinstall": "pnpm db:generate",
     "studio": "prisma studio",
+    "studio:test": "pnpm ensure:test-db && cross-env DATABASE_URL=file:./test.db prisma studio",
     "dev": "tsc --watch",
     "build": "tsc"
   },
@@ -45,6 +49,7 @@
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@repo/ui": "workspace:*",
+    "cross-env": "^7.0.3",
     "@types/node": "^22.13.1",
     "vitest": "^3.0.4"
   }

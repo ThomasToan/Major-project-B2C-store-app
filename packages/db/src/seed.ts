@@ -15,8 +15,8 @@ export async function seed() {
 
 export async function seedProducts() {
   await client.db.cartItem.deleteMany();
-  await client.db.cart.deleteMany();
   await client.db.customerSession.deleteMany();
+  await client.db.cart.deleteMany();
   await client.db.purchaseItem.deleteMany();
   await client.db.purchase.deleteMany();
   await client.db.user.deleteMany();
