@@ -6,7 +6,6 @@
         "name": "next"
       }
     ],
-    "types": ["@vitest/browser/providers/playwright"],
     "paths": {
       "@/*": ["./src/*"]
     }

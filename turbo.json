@@ -2,12 +2,10 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "globalEnv": [
-    "PASSWORD",
     "VITEST",
     "E2E",
     "TEST_DATABASE_URL",
-    "DATABASE_URL",
-    "JWT_SECRET"
+    "DATABASE_URL"
   ],
   "tasks": {
     "build": {
@@ -31,22 +29,7 @@
     "dev:test": {
       "dependsOn": ["check-types"]
     },
-    "test-1": {},
-    "dev:test-1": {
-      "dependsOn": ["dev:test"]
-    },
-    "test-2": {},
-    "dev:test-2": {
-      "dependsOn": ["dev:test"]
-    },
-    "test-3": {},
     "test:b2c": {},
-    "dev:test-3": {
-      "dependsOn": ["dev:test"]
-    },
-    "all:test": {
-      "dependsOn": ["test", "test-1", "test-2", "test-3"]
-    },
     "db:generate": {
       "dependsOn": ["^db:generate"]
     }
