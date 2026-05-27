@@ -54,6 +54,17 @@ type PurchaseWithItems = Prisma.PurchaseGetPayload<{
   };
 }>;
 
+type AdminPurchaseWithItems = Prisma.PurchaseGetPayload<{
+  include: {
+    items: {
+      include: {
+        product: true;
+      };
+    };
+    user: true;
+  };
+}>;
+
 export type CartSummaryItem = {
   id: number;
   productId: number;
@@ -88,6 +99,10 @@ export type PurchaseSummary = {
   totalAmount: number;
   createdAt: Date;
   items: PurchaseSummaryItem[];
+};
+
+export type AdminPurchaseSummary = PurchaseSummary & {
+  user: SafeCustomer | null;
 };
 
 export type CheckoutErrorCode =
@@ -423,6 +438,15 @@ function toPurchaseSummary(purchase: PurchaseWithItems): PurchaseSummary {
     })),
     totalAmount: purchase.totalAmount,
     userId: purchase.userId,
+  };
+}
+
+function toAdminPurchaseSummary(
+  purchase: AdminPurchaseWithItems,
+): AdminPurchaseSummary {
+  return {
+    ...toPurchaseSummary(purchase),
+    user: purchase.user ? toSafeCustomer(purchase.user) : null,
   };
 }
 
@@ -945,6 +969,29 @@ export async function getPurchasesForUser(
   });
 
   return purchases.map(toPurchaseSummary);
+}
+
+export async function getAllPurchasesForAdmin(): Promise<
+  AdminPurchaseSummary[]
+> {
+  const purchases = await client.db.purchase.findMany({
+    include: {
+      items: {
+        include: {
+          product: true,
+        },
+        orderBy: {
+          id: "asc",
+        },
+      },
+      user: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return purchases.map(toAdminPurchaseSummary);
 }
 
 export async function getPostByUrlIdFromDatabase(urlId: string) {

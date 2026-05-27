@@ -65,7 +65,7 @@ export default async function AdminDashboardPage() {
                 Manage Products
               </h2>
               <p className="text-secondary mt-2 text-sm leading-6">
-                Product management will be added in the admin CRUD step.
+                View, create, and edit Thomas Store product records.
               </p>
             </Link>
             <Link
@@ -76,7 +76,7 @@ export default async function AdminDashboardPage() {
                 View Orders
               </h2>
               <p className="text-secondary mt-2 text-sm leading-6">
-                Admin purchase records will be added in the next admin step.
+                Review completed purchase records from all customers.
               </p>
             </Link>
           </div>
