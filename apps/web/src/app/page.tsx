@@ -4,16 +4,18 @@ import { AppLayout } from "../components/Layout/AppLayout";
 
 const features = [
   {
-    description: "Search and filter active products from the store database.",
+    description:
+      "Search, filter, and view active products from the store catalogue.",
     title: "Browse products",
   },
   {
-    description: "A guided payment flow will be added in the checkout step.",
-    title: "Secure mock checkout coming soon",
+    description: "Complete a safe mock payment flow and place a test order.",
+    title: "Demo checkout",
   },
   {
-    description: "Registered customers will be able to review past orders.",
-    title: "Track purchase history coming soon",
+    description:
+      "Registered customers can review their past orders and order details.",
+    title: "Track purchase history",
   },
 ];
 
@@ -30,14 +32,14 @@ export default async function Home() {
           >
             <div>
               <p className="text-wsu text-sm font-semibold uppercase">
-                Applied Project Option 2
+                B2C STORE APPLICATION
               </p>
               <h1 className="text-primary mt-3 max-w-3xl text-4xl font-bold leading-tight md:text-5xl">
                 Thomas Store
               </h1>
               <p className="text-secondary mt-4 max-w-2xl text-base leading-7">
-                Welcome to the storefront. Browse products, manage your cart,
-                and prepare for checkout features coming next.
+                Welcome to Thomas Store. Browse products, manage your cart,
+                complete a demo checkout, and review your purchase history.
               </p>
             </div>
 
