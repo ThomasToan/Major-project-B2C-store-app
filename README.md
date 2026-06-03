@@ -1,260 +1,271 @@
-# Assignment 2 - Blog - Client App
+# Thomas Store
 
-The goal of this assignment is to implement all the client side functionality.
-Example implementation is in the image below.
+Thomas Store is a B2C Store Application built for the COMP3036 Applied Project Option 2. It started from an existing assignment codebase and has been converted into a complete store application with customer shopping features, admin management features, automated B2C tests, and deployment support.
 
-## Success Criteria
+Live deployment:
 
-- ✅ All of the tests must be passing
-- ✅ You must be able to explain any code in the codebase
+https://thomasdangstore.vercel.app
 
-## 👾 Requirements - Assignment 2.1 - Client
+## Project Overview
 
-> 💡Idea! Create a new issue in your repository, where you can track the completion of these items. Just copy paste them into the issue and mark them as complete as you go. Make sure you copy the source from README.md not the preview text.
+Thomas Store allows customers to browse products, search and filter the store catalogue, register and log in, manage a database-backed cart, complete a mock checkout, and review their purchase history. Admin users can access protected admin pages to manage products and view purchase records.
 
-### HOME SCREEN
+The application uses a Next.js web app, a Prisma database package, Neon PostgreSQL, Playwright E2E tests, and GitHub Actions CI.
 
-- [ ] User must see only the "active" posts
-- [ ] User must see the list of blog post categories, where each category points to UI showing only posts of that category
-- [ ] User must see the list of blog post tags, where each tag points to UI showing only posts of that category
-- [ ] User must see the history of blog posts, showing month and year, where each moth, year tuple points to UI showing only posts of that category
-- [ ] Tags and history items shown are only considered from active posts
-- [ ] The list shows the following items:
-  - blog title, pointing to detail page
-  - short description
-  - date
-  - image
-  - tags
-  - likes
-  - views
-- [ ] User must be able to switch between dark and light theme with a button
-      The dark theme setting is stored in the "data-theme" attribute on html element
-- [ ] There is a search functionality that filters blogs based on string found in title or description, redirecting to search page
+## Completed Features
 
-### DETAIL SCREEN
+- Product browsing
+- Product search and category filtering
+- Product detail pages
+- Customer registration, login, and logout
+- HTTP-only cookie session authentication
+- Database-backed cart linked to the logged-in user
+- Guest browsing with login required before adding to cart
+- Mock checkout flow
+- Purchase and purchase item records
+- Product stock reduction after checkout
+- Cart clearing after successful checkout
+- Customer purchase history
+- Admin access control using `CUSTOMER` and `ADMIN` roles
+- Admin product list
+- Admin create product
+- Admin edit product
+- Admin active/inactive product management
+- Admin purchase records
+- Neon PostgreSQL database with Prisma
+- Separate test database variables for Playwright tests
+- Automated B2C Playwright tests
+- GitHub Actions CI
+- Vercel deployment support
 
-- [ ] Detail page shows the same items as list item, but the short description is replaced by formatted long description
-- [ ] Detail text is stored as Markdown, which needs to be converted to HTML
+## Tech Stack
 
-### CATEGORY SCREEN
+- Next.js
+- React
+- TypeScript
+- Prisma
+- Neon PostgreSQL
+- Playwright
+- pnpm
+- Turborepo
+- Vercel
 
-- [ ] Displays posts from the category from url (e.g. /category/react)
-- [ ] Displays "0 Posts" when search does no posts have that category
+## Project Structure
 
-### HISTORY SCREEN
-
-- [ ] Displays posts from year and month specified in the url (e.g. /history/2024/12)
-- [ ] Displays "0 Posts" when no posts are from that given month and year
-
-### TAG SCREEN
-
-- [ ] Displays posts with the tag url (e.g. /tags/dev-tools)
-- [ ] Displays "0 Posts" when search does no posts have that tag
-
-### SEARCH SCREEN
-
-- [ ] Displays results based on search string stored in the query string (e.g. /search?q=Fat)
-- [ ] Displays "0 Posts" when search does not find anything
-
-## 👾 Requirements - Assignment 2.2 - Admin
-
-> 💡Idea! Create a new issue in your repository, where you can track the completion of these items. Just copy paste them into the issue and mark them as complete as you go. Make sure you copy the source from README.md not the preview text.
-
-### ADMIN HOME SCREEN
-
-- [ ] Shows Login screen if not logged
-- [ ] Shows List screen if logged
-- [ ] There must be a logout button
-- [ ] Clicking the logout button logs the user out
-- [ ] Authenticate the current client using a hard-coded password
-- [ ] Use a httpOnly cookie and name it "auth_token" to remember the signed-in state.
-
-### ADMIN LIST SCREEN
-
-- [ ] Shows both active and inactive posts
-- [ ] Article list is only accessible to logged-in users.
-- [ ] There is a filter screen that allows filtering posts by:
-  - [ ] Title or content
-  - [ ] Tags
-  - [ ] Date
-  - [ ] Visibility
-- [ ] You can combine multiple filters
-- [ ] Users can sort posts by name or creation date, both ascending and descending
-- [ ] The post list displays a list of filtered items with the following information:
-  - [ ] The list post item displays the image, title of the post
-  - [ ] The list post items display metadata such as category, tags, and "active" status.
-  - [ ] The active status is a button that, on click, just displays a message
-- [ ] Clicking on the title takes the user to the MODIFY SCREEN, allowing the user to modify the current post
-- [ ] There is a button to create new posts
-- [ ] Clicking on the "Create Post" button takes the user to the CREATE SCREEN
-
-### ADMIN CREATE and UPDATE screen
-
-Both create and update screens display the same UI, but the update screen preloads the data into fields.
-
-- [ ] Page is only accessible to logged in user
-- [ ] There must be the following fields which must be validated for errors:
-  - [ ] Title (`input, string`)
-  - [ ] Description (textarea, string, max 200 characters)
-  - [ ] Content (`textarea, markdown string`)
-  - [ ] Tag List (`input, string`) shows a comma-separated list of tags.
-  - [ ] Image URL (`input, URL`)
-- [ ] Under the Description is a "Preview" button that replaces the text area with a rendered markdown string and changes the title to "Close Preview".
-- [ ] When the preview is closed, the cursor must be in the same position as before opening the preview.
-- [ ] Under the image input is an image preview.
-- [ ] User can click on the "Save" button that displays an error ui if one of the fields is not specified or valid.
-
-## 👾 Requirements: Assignment 2.3
-
-### BACKEND / CLIENT
-
-- [ ] Data is loaded from the database backend
-- [ ] Data filtering is done server side and only filtered data is sent to client
-- [ ] Each visit of the page increases the post "views" count by one
-- [ ] User can "like" the post on the detail screen, NOT on the list screen (hint, create the `/api/likes/route.ts` route and implement the needed handlers)
-- [ ] Liking the post increases the like count by one
-- [ ] User can like the post only once (use IP)
-- [ ] User can unlike the post, decreasing the like post by one
-
-### BACKEND / ADMIN / AUTHORISATION
-
-> For these two requirements we do not have End 2 End tests and will be checked manually.
-
-- [ ] The password is checked on server in the `/api/auth` route
-- [ ] The POST method is used for login
-- [ ] The DELETE method is used for logout
-- [ ] The admin home page checks for the presence of JWT token and verifies it, if the token does not exist or is invalid, displays the login control.
-
-### BACKEND / ADMIN / LIST SCREEN
-
-- [ ] Logged in user can activate / deactivate a post clicking on the activate button, automatically saving changes
-
-### BACKEND / ADMIN / UPDATE SCREEN
-
-- [ ] Logged in user can save changes to database, if the form is validated
-
-### BACKEND / ADMIN / CREATE SCREEN
-
-- [ ] Logged in user can create a new post to the database, if the form is validated
-
-## Prerequisites
-
-First, make sure that "pnpm" and "turbo" is installed in your computer. If not, please follow installation instructions for pnpm. If turbo is not installed, please install it using pnpm with the following command:
-
-Then, run the following command to install turborepo.
-
-```
-pnpm add -g turbo
+```text
+.
++-- apps/
+|   +-- web/                 # Next.js Thomas Store web app
++-- packages/
+|   +-- db/                  # Prisma schema, database client, seed, store helpers
+|   +-- ui/                  # Shared UI/styles package used by the web app
++-- tests/
+|   +-- playwright/          # B2C Playwright E2E tests and config
++-- docs/
+|   +-- API.md               # API documentation
++-- .github/
+|   +-- workflows/ci.yml     # B2C Store GitHub Actions CI
++-- package.json
++-- pnpm-lock.yaml
++-- turbo.json
 ```
 
-## Installing the project
+## Environment Variables
 
-Once the pnpm is installed, in the root of the project install the packages
+Do not commit real database URLs, passwords, or secrets.
 
-```
-pnpm i
-```
+Create the required environment variables locally and in deployment environments.
 
-To run end to end tests you need to install headless browsers. Please run the following command in the `tests/playwright-web` directory
-
-```
-pnpx playwright install
-```
-
-## Environment
-
-In all packages `apps/admin` and `packages/db` find `.env.example` files and copy them to `.env`. Set your environment variables accordingly!
-
-## Running the project
-
-To run the project, run the following command in the root directory of your project:
-
-```
-turbo dev
+```env
+DATABASE_URL="your-neon-pooled-development-url"
+DIRECT_URL="your-neon-direct-development-url"
+TEST_DATABASE_URL="your-neon-pooled-test-url"
+TEST_DIRECT_URL="your-neon-direct-test-url"
 ```
 
-This will run:
+Database variable meaning:
 
-- Client application at [http://localhost:3001](http://localhost:3001)
-- Admin application at [http://localhost:3002](http://localhost:3002)
+- `DATABASE_URL` should be the Neon pooled database URL. The host normally contains `-pooler`.
+- `DIRECT_URL` should be the Neon direct database URL. The host normally does not contain `-pooler`.
+- `TEST_DATABASE_URL` should point to a separate Neon test branch or test database, using the pooled URL.
+- `TEST_DIRECT_URL` should point to the same test database, using the direct URL.
 
-## Running tests
+The test database must be separate from the development and production database. Playwright tests reset and seed data, so do not point test variables at production.
 
-To run the tests please run, you have two options.
+## Installation
 
-### Running Tests in Console
+Install dependencies from the repository root:
 
-If you only wish to visualise the test results in console, please run the following command in the root of your project for the first part of the second assignment (i.e. Assignment 2.1):
-
-```
-turbo test-1
-```
-
-This launches the turbo console UI similar to below, where you can swap between different projects:
-
-![Turbo UI](https://skillpies.s3.ap-southeast-2.amazonaws.com/courses/full-stack-development/sections/assignment-2-1-blog-client-in-advanced-react/Screenshot%202025-02-05%20at%2014.30.45.png)
-
-> ⚠️⚠️ Make sure that ALL tests pass!
-
-If you want to run the tests for second part (i.e. Assignment 2.2) or third part (i.e. Assignment 2.3), run these commands:
-
-```
-turbo test-2 // or
-turbo test-3
+```bash
+pnpm install
 ```
 
-If you want to run all tests, please run
+Generate the Prisma client:
 
-```
-turbo all:test
-```
-
-### Running Tests in UIs
-
-The packaged tests framework also have the possibility of visually represent your tests for nicer view of test results. To see the UIs, run this command instead of `turbo test-1`:
-
-```
-turbo dev:test-1
+```bash
+pnpm --filter @repo/db db:generate
 ```
 
-This will launch the End to End testing framework Playwright's test UI similar to below, please use the Play buttons to run individual tests:
+## Database Setup
 
-![Playwright UI](https://skillpies.s3.ap-southeast-2.amazonaws.com/courses/full-stack-development/sections/assignment-2-1-blog-client-in-advanced-react/Screenshot%202025-02-05%20at%2014.40.35.png)
+Push the Prisma schema to the development database:
 
-It also launches the unit and integration test framework Vitest's UI, similar to below. Here, you can also use the play buttons to execute individual tests!
+```bash
+pnpm --filter @repo/db db:push
+```
 
-![Vitest UI](https://skillpies.s3.ap-southeast-2.amazonaws.com/courses/full-stack-development/sections/assignment-2-1-blog-client-in-advanced-react/Screenshot%202025-02-05%20at%2014.46.31.png)
+Seed the development database:
 
-## Project structure
+```bash
+pnpm --filter @repo/db seed
+```
 
-The project is monorepo with the following packages split into three categories:
+Open Prisma Studio for the development database:
 
-**Applications**
+```bash
+pnpm --filter @repo/db studio
+```
 
-Contains the following web applications:
+## Local Development
 
-- **apps/admin** - Admin Website
-- **apps/web** - Client website
+Run the web app locally:
 
-**Packages**
+```bash
+pnpm --filter @repo/web dev
+```
 
-Contains the following packages with shared code and configurations:
+The web app runs on:
 
-- **packages/ui** - Library of UI elements shared between admin and client
-- **packages/utils** - Library of utility functions shared between other projects
-- **packages/db** - Library handling the database connection
-- **packages/eslint-config**, **packages/tailwind-config** and **packages/typescript-config** contain configuration files for build pipelines for this project
+```text
+http://localhost:3001
+```
 
-**Tests**
+## Demo Accounts
 
-Contains the following test applications:
+Seeded admin account:
 
-- **tests/playwright-admin** - End to End tests for the admin application
-- **tests/playwright-web** - End to End tests for the client application
-- **tests/storybook** - Configured storybook instance for development and testing of React components in isolation
+```text
+Email: admin@thomasstore.com
+Password: admin123
+Role: ADMIN
+```
 
-## Application Structure
+Customers can register through the `/register` page in the UI.
 
-The client application comes with pre-defined router (only one route is missing for your learning).
-The client application also comes with pre defined structure of components and utilities for you to complete.
-Tha admin application is much more bare with most functionality AND structure needed to be completed by you.
+## Mock Checkout
+
+Checkout uses a mock payment flow only. No real payment is processed.
+
+Successful test card:
+
+```text
+4242 4242 4242 4242
+```
+
+Any other card number is treated as declined.
+
+## Testing
+
+Type check the web app:
+
+```bash
+pnpm --filter @repo/web check-types
+```
+
+Type check the database package:
+
+```bash
+pnpm --filter @repo/db exec tsc
+```
+
+Type check the Playwright tests:
+
+```bash
+pnpm --filter @repo/playwright exec tsc --noEmit
+```
+
+Run the B2C Playwright E2E suite:
+
+```bash
+pnpm --filter @repo/playwright test:b2c
+```
+
+Important testing note:
+
+- The B2C Playwright tests use `TEST_DATABASE_URL` and `TEST_DIRECT_URL`.
+- The tests reset and seed data for reliability.
+- Do not run Playwright tests against the production database.
+- The B2C test command uses the B2C Playwright config and does not rely on the old assignment tests.
+
+## API Documentation
+
+API documentation is available here:
+
+[docs/API.md](docs/API.md)
+
+The API documentation includes available endpoints, HTTP methods, authentication requirements, request bodies, example responses, database tables affected, and limitations.
+
+## Deployment
+
+Thomas Store is designed to deploy on Vercel.
+
+Deployment notes:
+
+- Vercel should use `apps/web` as the web app location.
+- The production database is Neon PostgreSQL.
+- Vercel needs `DATABASE_URL` and `DIRECT_URL` environment variables.
+- `DATABASE_URL` should be the Neon pooled production URL.
+- `DIRECT_URL` should be the Neon direct production URL.
+- `TEST_DATABASE_URL` and `TEST_DIRECT_URL` are only for local and CI tests.
+- Do not run `db:push` automatically at app runtime.
+- Push the schema and seed data intentionally using local or CI commands before relying on production data.
+
+Useful production preparation commands:
+
+```bash
+pnpm --filter @repo/db db:generate
+pnpm --filter @repo/db db:push
+pnpm --filter @repo/db seed
+Warning: the seed command resets demo data. Do not run it on a production database unless you intentionally want to reset the demo store data.
+```
+
+## Continuous Integration
+
+GitHub Actions runs the B2C Store CI workflow on push and pull request.
+
+The CI workflow:
+
+- Installs dependencies with pnpm.
+- Generates the Prisma client.
+- Prepares the test database.
+- Type checks the database package.
+- Type checks the web app.
+- Type checks the Playwright tests.
+- Installs Playwright Chromium.
+- Runs the B2C Playwright test suite.
+
+Required GitHub Actions secrets:
+
+```text
+DATABASE_URL
+DIRECT_URL
+TEST_DATABASE_URL
+TEST_DIRECT_URL
+```
+
+## Limitations
+
+- Checkout is mock-only and does not process real payments.
+- Product images are stored as URL strings.
+- The API is intended for this app, not as a public third-party API.
+- Admin accounts are seeded or managed through the database, not public registration.
+- Public registration always creates `CUSTOMER` users.
+- Playwright tests reset the test database, so they must use a separate test database.
+
+## Submission Notes
+
+This project is focused on the completed B2C Store application, not the old blog assignment tests. The main validation command for the completed project is:
+
+```bash
+pnpm --filter @repo/playwright test:b2c
+```
