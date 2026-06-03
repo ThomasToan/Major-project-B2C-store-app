@@ -8,7 +8,7 @@ test.describe("B2C HOME SCREEN", () => {
     await expect(
       page.getByRole("heading", { name: "Thomas Store" }),
     ).toBeVisible();
-    await expect(page.getByText("Welcome to the storefront.")).toBeVisible();
+    await expect(page.getByText(/Welcome to Thomas Store/)).toBeVisible();
   });
 
   test("opens products from the homepage", async ({ page }) => {
