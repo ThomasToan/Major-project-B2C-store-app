@@ -77,10 +77,11 @@ Do not commit real database URLs, passwords, or secrets.
 Create the required environment variables locally and in deployment environments.
 
 ```env
-DATABASE_URL="your-neon-pooled-development-url"
-DIRECT_URL="your-neon-direct-development-url"
-TEST_DATABASE_URL="your-neon-pooled-test-url"
-TEST_DIRECT_URL="your-neon-direct-test-url"
+DATABASE_URL="postgresql://neondb_owner:npg_VSHzTs8BOqx9@ep-delicate-hat-a7icngws-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+DIRECT_URL="postgresql://neondb_owner:npg_VSHzTs8BOqx9@ep-delicate-hat-a7icngws.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+
+TEST_DATABASE_URL="postgresql://neondb_owner:npg_sAYoK1y5HbSP@ep-damp-meadow-a7hj2zvz-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+TEST_DIRECT_URL="postgresql://neondb_owner:npg_sAYoK1y5HbSP@ep-damp-meadow-a7hj2zvz.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 ```
 
 Database variable meaning:
